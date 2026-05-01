@@ -56,6 +56,24 @@ For each chapter, apply SQ3R:
 
 Use `assets/chapter_note_template.md`.
 
+### AI Analysis Layer
+
+After SQ3R, every chapter note must include an `AI Analysis / AI 分析` section. This section is required. It is the Agent's own analysis, not only extracted text or a restatement of the source.
+
+AI Analysis must include:
+
+1. Cross-reference / 跨界关联
+   - Connect the chapter's ideas to other books, fields, frameworks, or general knowledge.
+   - Use broad transferable knowledge, not user-specific company or personal context.
+2. Applicability boundary / 适用边界
+   - State when the idea works, when it may fail, and what assumptions it depends on.
+3. Critique / 批判性思考
+   - Identify blind spots, survivorship bias, sample-selection bias, logic leaps, over-attribution, counterexamples, or alternative explanations.
+4. One-sentence distillation / 一句话提炼
+   - Write the one sentence that would teach the chapter's most important idea to someone who has not read the book.
+
+Do not turn AI Analysis into company-specific consulting. Avoid claims like "this means X for the user's company." Keep the analysis general, transferable, and reusable.
+
 Must preserve these detail types in chapter notes:
 
 - Definitions and new terms
@@ -88,6 +106,68 @@ Move from source to abstraction:
 - L4: atomic knowledge cards
 
 Never create L3 or L4 before L2 exists for every chapter.
+
+## Consolidated Reading Notes
+
+In addition to per-chapter notes, create a consolidated reading note:
+
+```text
+outputs/reading_notes.md
+```
+
+`outputs/reading_notes.md` is the primary reading output. Per-chapter notes are audit and traceability outputs.
+
+Required structure:
+
+```markdown
+# 《书名》阅读笔记
+
+## 大目录
+
+| 章节 | 核心主张 | 页数/行数 |
+|------|----------|-----------|
+| 第一章 xxx | 一句话概括 | L1-L100 |
+| 第二章 xxx | 一句话概括 | L101-L200 |
+
+## 分章节笔记
+
+### 第一章 xxx
+
+#### 核心主张
+
+作者在这一章的主要论点是什么？
+
+#### 关键要点
+
+- 要点 1：xxx（原文依据：xxx）
+- 要点 2：xxx（原文依据：xxx）
+- 要点 3：xxx（原文依据：xxx）
+
+#### AI 分析
+
+- 跨界关联：xxx
+- 适用边界：xxx
+- 批判性思考：xxx
+- 一句话总结：xxx
+
+### 第二章 xxx
+
+同上格式。
+
+## 全书核心框架
+
+从所有章节中提炼 3-7 个核心框架、模型或方法论。
+
+## 金句集
+
+摘录最有价值的 10-20 句话，并标注来源章节。
+```
+
+Rules:
+
+- `outputs/reading_notes.md` must cover every in-scope chapter.
+- For books with 100+ chapters, related chapters may be grouped, but every chapter must still be listed with at least one core claim.
+- If only part of the book was studied, state the covered range at the top of the file.
 
 ## Step 7: Audit Omissions
 
@@ -150,6 +230,22 @@ Do not proceed to the full-book summary or knowledge cards if any chapter note i
 
 内容性审计不是检查“有没有文件”，而是检查“有没有真正学过”。如果某章笔记只是空壳、标题、模板占位、泛泛摘要，必须标记为 incomplete，并重新阅读该章。
 
+## Content Quality Check
+
+After structural audit passes, verify content quality.
+
+The Agent must check:
+
+1. Each chapter note contains `AI Analysis` or `AI 分析`.
+2. Each chapter note contains core claims, key points, and evidence / cases / examples.
+3. `outputs/reading_notes.md` exists.
+4. `outputs/reading_notes.md` covers all in-scope chapters.
+5. `outputs/reading_notes.md` contains `全书核心框架`.
+6. `全书核心框架` contains at least 3 items unless the source is very short.
+7. Chapter notes that are only headings, templates, empty shells, or too short are marked incomplete.
+
+Do not proceed to full-book summary or knowledge cards if any in-scope chapter fails the content quality check.
+
 ## Completion Criteria
 
 Before generating final knowledge cards, confirm all of the following:
@@ -182,30 +278,54 @@ Read `references/card_rules.md` first. Each card must contain exactly one idea a
 
 After all artifacts are created, report to the user:
 
-1. Raw source location: where the original or converted source file is stored.
-2. Chapter coverage: which chapters were covered.
-3. Chapter notes: how many notes were created and where they are stored.
-4. Full-book summary: path to the summary file.
-5. Knowledge cards: list each card with its path.
-6. Audit result: whether structural and content audits passed.
-7. Skipped chapters: list any skipped chapters and explain why.
-8. Index updates: if any index was updated, mention the path.
+1. Book overview
+   - Title
+   - Author if available
+   - Chapter count
+   - Total lines/pages if available
+2. Coverage
+   - Which chapters were studied
+   - Whether this was full-book learning or subset learning
+3. Key takeaways
+   - 3-5 most important insights from the book
+   - These must be Agent synthesis, not only chapter titles
+4. Output files
+   - Consolidated reading notes path + line count
+   - Per-chapter notes count
+   - Knowledge cards count + list
+   - Audit result path and pass/fail status
+5. Skipped chapters
+   - List skipped chapters and reasons
+   - If none, say none
+6. Archiving status
+   - Whether files were saved to `raw/books`, `outputs`, `knowledge_cards`, or an external knowledge base
 
 Example:
 
 ```text
-学习完成！归档路径如下：
+📚 学习完成：《书名》
 
-- 原文：`raw/books/书名.md`
-- 目录树：`outputs/toc.json`
-- 章节拆分：`outputs/chapters/`
-- 章节笔记：共 12 篇，位于 `outputs/notes/`
-- 全书摘要：`outputs/book_summary.md`
-- 知识卡片：共 8 张，位于 `knowledge_cards/`
+📖 概览：作者 | X 章 | X 万字
+
+✅ 覆盖范围：全书 / 第 X 章至第 Y 章
+
+📝 核心收获：
+1. xxx
+2. xxx
+3. xxx
+
+📁 文件：
+- 阅读笔记：outputs/reading_notes.md（X 行）
+- 章节笔记：X 个，位于 outputs/notes/
+- 全书摘要：outputs/book_summary.md
+- 知识卡片：X 张
   - `knowledge_cards/001-xxx.md`
   - `knowledge_cards/002-xxx.md`
-- 审计结果：结构性审计通过，内容性审计通过
-- 跳过章节：无
+- 审计报告：outputs/audit.json，通过 / 未通过
+
+⏭️ 跳过章节：无 / xxx（原因）
+
+📦 归档状态：已保存到 xxx
 ```
 
 If only part of the book was studied, explicitly write:

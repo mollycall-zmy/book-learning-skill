@@ -35,6 +35,20 @@
 
 -
 
+## AI Analysis / AI 分析
+
+### Cross-reference / 跨界关联
+
+
+### Applicability Boundary / 适用边界
+
+
+### Critique / 批判性思考
+
+
+### One-sentence Distillation / 一句话提炼
+
+
 ## Open Questions
 
 -

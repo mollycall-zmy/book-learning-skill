@@ -87,6 +87,69 @@ Reason: too shallow. It only names the idea but does not explain how it works, w
 
 This card is better because it includes components, reasoning, example, and reusable logic.
 
+## Depth Requirement
+
+A knowledge card is not valid if it only contains:
+
+- Concept name
+- Short definition
+- One-line summary
+- Chapter-title-like phrase
+- Slogan without evidence
+
+A valid knowledge card must contain:
+
+1. Concept / idea
+   - The core idea
+2. Reasoning
+   - Why this idea matters
+   - What problem it solves
+3. Evidence from the book
+   - At least one concrete example, case, data point, argument chain, or quote from the book
+4. External connection
+   - Connection to another book, framework, discipline, or general knowledge
+   - Keep it universal, not user-specific
+5. Applicability note
+   - When to use this idea
+   - When not to use it
+   - Assumptions or failure conditions
+6. One-sentence distillation
+   - One sentence that captures the reusable essence
+
+Each card should remain useful outside the original book. Do not force in user company context.
+
+### Shallow Card Example
+
+```markdown
+专注 = 把资源集中在一件事上
+```
+
+Problem: only a definition, with no reasoning, case, boundary, counterexample, or transfer value.
+
+### Valid Card Example
+
+```markdown
+专注的本质是资源约束下的最优配置。
+
+它重要是因为组织资源有限，什么都做往往意味着什么都做不好。书中可以用具体案例说明：当企业试图同时抓住多个方向时，资源、管理注意力和产品体验都会被稀释。
+
+适用条件：
+- 资源有限；
+- 目标足够清晰；
+- 方向有足够长的验证周期。
+
+失效条件：
+- 市场快速变化；
+- 新机会窗口极短；
+- 企业已有可复用能力，能够支撑多线探索。
+
+外部关联：
+这个观点可以连接到定位理论、战略取舍、军事集中兵力原则等。
+
+一句话提炼：
+专注不是少做事，而是在资源有限时把胜率最高的事做到足够深。
+```
+
 ## Card Types
 
 - Concept: defines a term or distinction
