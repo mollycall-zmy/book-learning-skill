@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/images/cover.png" alt="book-learning-skill cover" width="100%">
-</p>
-
 <h1 align="center">book-learning-skill</h1>
 
 <p align="center">
@@ -24,7 +20,7 @@
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-blue.svg">
 </p>
 
-**book-learning-skill** 是一个面向 AI Agent 的开源技能，用来把一本书从 PDF / EPUB / DOCX / HTML 源文件逐步拆解成可审计、可追溯、可复用的结构化知识资产。
+**book-learning-skill** 是一个面向 AI Agent 的开源技能，用来把一本书从 PDF / EPUB / DOCX / HTML / Markdown 源文件逐步拆解成可审计、可追溯、可复用的结构化知识资产。
 
 它不是“读完写个摘要”，而是围绕目录树、章节笔记、遗漏审计、分层摘要和原子知识卡片，帮助 Agent 更稳地完成整本书学习。
 
@@ -34,27 +30,32 @@
 
 ## 目录
 
+- [项目简介](#项目简介)
 - [这个项目解决什么问题](#这个项目解决什么问题)
 - [核心理念](#核心理念)
 - [How It Works](#how-it-works)
 - [Skill](#skill)
-- [功能特性](#功能特性)
+- [当前能力](#当前能力)
 - [支持格式](#支持格式)
-- [输出物](#输出物)
+- [输入与输出](#输入与输出)
 - [快速开始](#快速开始)
-- [本地测试](#本地测试)
 - [在 Agent 中使用](#在-agent-中使用)
 - [仓库结构](#仓库结构)
-- [Roadmap](#roadmap)
-- [License](#license--许可证)
-- [Brand Notice](#brand-notice--品牌说明)
-- [Contributing](#contributing--贡献)
+- [本地测试](#本地测试)
+- [License](#license)
+- [Contributing](#contributing)
+
+## 项目简介
+
+`book-learning-skill` 是一个标准 Agent Skill 仓库。它把“学习一本书”拆成一组明确步骤：转换文档、提取目录、拆分章节、逐章做笔记、审计遗漏，再产出可追溯的摘要和知识卡片。
+
+本仓库只包含 Skill 指令、脚本、模板、测试和自造示例文件；不包含真实书籍、PDF、EPUB、版权摘录或用户私有文件。
 
 ## 这个项目解决什么问题
 
-整本书学习不是一个简单摘要任务。长书通常不能一次性塞给模型，普通摘要又很容易跳章、漏细节、丢上下文。更麻烦的是，很多读书笔记最后只剩结论，却缺少来源追溯，无法确认某个观点来自哪一章、哪些证据或哪些限定条件。
+整本书学习不是一个简单摘要任务。长书通常不能一次性塞给模型，普通摘要又很容易跳章、漏细节、丢上下文。很多读书笔记最后只剩结论，却缺少来源追溯，无法确认某个观点来自哪一章、哪些证据或哪些限定条件。
 
-Agent 在处理长文本时需要明确工作流，而不是自由发挥。`book-learning-skill` 把整本书学习拆成可执行步骤：先识别目录树和章节边界，再逐章消化，接着做遗漏审计，最后才生成全书摘要和原子知识卡片。
+Agent 在处理长文本时需要明确工作流，而不是自由发挥。这个 Skill 将整本书学习拆成可执行步骤，让 Agent 先保留结构，再逐章理解，最后才做跨章整合。
 
 ## 核心理念
 
@@ -71,24 +72,9 @@ Agent 在处理长文本时需要明确工作流，而不是自由发挥。`book
 ## How It Works
 
 ```text
-You / User
-   │
-   ▼
-Agent（Codex / Hermes / Cursor / OpenClaw）
-   │
-   ▼
-book-learning-skill
-   ├── 检测文件格式
-   ├── PDF / EPUB / DOCX / HTML → Markdown
-   ├── 提取目录树 + 章节边界
-   ├── 按章节拆分内容
-   ├── 逐章 SQ3R 阅读与笔记
-   ├── 章节遗漏审计
-   ├── 分层摘要 L0 → L4
-   └── 生成原子知识卡片
-   │
-   ▼
-知识库 / Notes / Atomic Knowledge Cards
+User → Agent → book-learning skill
+             → 转 Markdown → 提取 TOC → 拆分章节
+             → 逐章笔记 → 遗漏审计 → 知识卡片
 ```
 
 这个流程的关键不是“更快总结”，而是让 Agent 在长文本处理中具备结构感、审计感和可追溯性。
@@ -99,7 +85,7 @@ book-learning-skill
 | --- | --- | --- |
 | **book-learning** | 系统性学习整本书，完成格式转换、目录提取、逐章笔记、遗漏审计、分层摘要和原子知识卡片 | `学习这本书` `读一下这本书` `喂你一本书` `逐章做笔记` `把这本书整理成知识卡片` |
 
-## 功能特性
+## 当前能力
 
 - [x] 支持 PDF / EPUB / DOCX / HTML / Markdown 工作流
 - [x] 将文档统一转换为 Markdown
@@ -109,10 +95,6 @@ book-learning-skill
 - [x] 检查章节文件与笔记文件是否遗漏
 - [x] 提供章节笔记、全书摘要、知识卡片模板
 - [x] 提供 Agent Skill 标准目录结构
-- [ ] 自动生成章节笔记骨架
-- [ ] OCR 流程编排
-- [ ] 大型书籍断点续跑
-- [ ] 自动生成知识卡片索引
 
 ## 支持格式
 
@@ -124,11 +106,16 @@ book-learning-skill
 | `.docx` | 支持 | 使用 Pandoc 转 Markdown |
 | `.html` / `.htm` | 支持 | 使用 Pandoc 转 Markdown |
 | 扫描版 PDF | 间接支持 | 需先 OCR，再进入 PDF → Markdown 流程 |
-| `.caj` / `.nh` / `.kdh` | 暂不直接支持 | 建议先转 PDF，再进入 PDF 工作流 |
 
-## 输出物
+## 输入与输出
 
-这个 Skill 的目标不是只生成一个摘要，而是生成一组可维护的学习资产：
+运行时内容默认放在 git 忽略的目录中：
+
+- `raw/books/`：原始书籍文件，只读保存
+- `outputs/`：转换后的 Markdown、TOC、章节拆分、笔记和审计报告
+- `knowledge_base/`：最终知识卡片和索引
+
+主要输出物：
 
 | 输出物 | 说明 |
 | --- | --- |
@@ -138,7 +125,6 @@ book-learning-skill
 | `audit.json` | 章节遗漏审计报告 |
 | `book_summary.md` | 全书分层摘要 |
 | `knowledge_cards/` | 原子知识卡片 |
-| `index.md` | 知识库索引，v0.2.0 计划支持 |
 
 ## 快速开始
 
@@ -166,9 +152,7 @@ python3 .agents/skills/book-learning/scripts/check_tools.py
 
 ```bash
 python3 .agents/skills/book-learning/scripts/extract_toc.py examples/sample_book.md --out outputs/toc.json
-
 python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_book.md --toc outputs/toc.json --out outputs/chapters
-
 python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
 ```
 
@@ -176,28 +160,11 @@ python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc
 
 ```bash
 python3 .agents/skills/book-learning/scripts/convert_to_md.py path/to/your_book.pdf --out outputs/your_book.md
-
 python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/your_book.md --out outputs/toc.json
-
 python3 .agents/skills/book-learning/scripts/split_chapters.py outputs/your_book.md --toc outputs/toc.json --out outputs/chapters
 ```
 
 请只使用你合法拥有或有权处理的书籍文件。不要把版权书籍、私人文件或转换后的输出提交到 Git 仓库。
-
-## 本地测试
-
-```bash
-python3 -m unittest discover -s tests
-```
-
-CLI smoke test：
-
-```bash
-python3 .agents/skills/book-learning/scripts/check_tools.py
-python3 .agents/skills/book-learning/scripts/extract_toc.py examples/sample_book.md --out outputs/toc.json
-python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_book.md --toc outputs/toc.json --out outputs/chapters
-python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
-```
 
 ## 在 Agent 中使用
 
@@ -271,74 +238,30 @@ book-learning-skill/
                 └── audit_report_template.md
 ```
 
-`docs/images/cover.png` 是 README 封面图占位路径，当前不会提交图片文件。
+`docs/images/cover.png` 保留在仓库中，但 README 暂不展示封面图。
 
-## Roadmap
-
-### v0.1.x
-
-- [x] 标准 Agent Skill 目录
-- [x] PDF / EPUB / DOCX / HTML / Markdown 转换入口
-- [x] TOC 提取
-- [x] 章节拆分
-- [x] 章节遗漏审计
-- [x] 中文 README
-- [x] 贡献指南
-
-### v0.2.0
-
-- [ ] `check_tools.py --install` 自动安装可选依赖
-- [ ] 自动生成章节笔记骨架
-- [ ] `progress.json` 断点续跑
-- [ ] OCR 流程编排
-- [ ] 自动生成知识卡片索引
-- [ ] Obsidian / Logseq 输出适配
-
-### v0.3.0
-
-- [ ] 多本书对比学习
-- [ ] 跨章主题聚合
-- [ ] 概念图谱
-- [ ] 更复杂的目录识别
-- [ ] 可视化审计报告
-
-## License / 许可证
-
-This repository is released under the MIT License. See [LICENSE](./LICENSE) for details.
-
-本仓库采用 MIT License 开源，详见 [LICENSE](./LICENSE)。
-
-## Brand Notice / 品牌说明
-
-The source code and general documentation are open under the MIT License.
-
-However, brand assets, cover images, logos, and the “MW · 美未职造” brand identity are not included in the default open-source license unless explicitly stated otherwise.
-
-本仓库中的源代码与通用文档采用 MIT License 开源。
-
-但品牌资产、封面图、Logo，以及 “MW · 美未职造” 品牌标识不默认包含在开源授权范围内；如需用于商业传播、再包装或品牌化复用，请先联系作者。
-
-## Contributing / 贡献
-
-欢迎提交 Issue 和 Pull Request。
-
-适合贡献的方向包括：
-
-- OCR 流程优化
-- 自动安装依赖
-- 更智能的目录识别
-- Obsidian / Logseq 输出格式
-- 知识卡片索引
-- 多语言 README
-- 更多 Agent 平台适配
-
-提交前请确认：
+## 本地测试
 
 ```bash
 python3 -m unittest discover -s tests
 ```
 
-并确保没有提交任何版权书籍、私人文件或输出目录。
+CLI smoke test：
+
+```bash
+python3 .agents/skills/book-learning/scripts/check_tools.py
+python3 .agents/skills/book-learning/scripts/extract_toc.py examples/sample_book.md --out outputs/toc.json
+python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_book.md --toc outputs/toc.json --out outputs/chapters
+python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
+```
+
+## License
+
+本项目采用 MIT License，详见 [LICENSE](./LICENSE)。
+
+## Contributing
+
+欢迎提交 Issue 和 Pull Request。提交前请运行测试，并确保没有提交任何版权书籍、私人文件或输出目录。
 
 更多说明见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
