@@ -16,6 +16,7 @@ from extract_toc import main_chapters_from_toc  # noqa: E402
 REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created")
 AI_MARKERS = ("AI 分析", "AI Analysis")
 BACKLINK_RE = re.compile(r"\[\[raw/books/[^#\]]+#[^\]]+\]\]")
+HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
 
 
 def extract_frontmatter(content: str) -> dict[str, str]:
@@ -34,21 +35,88 @@ def extract_frontmatter(content: str) -> dict[str, str]:
     return fields
 
 
-def section_for_title(content: str, title: str, all_titles: list[str]) -> str:
-    escaped = re.escape(title)
-    match = re.search(rf"^##+\s+{escaped}\s*$", content, flags=re.MULTILINE)
-    if not match:
-        return ""
+def clean_heading(title: str) -> str:
+    return re.sub(r"\s+#+\s*$", "", title.strip()).strip()
 
-    next_starts = []
-    for other in all_titles:
-        if other == title:
-            continue
-        other_match = re.search(rf"^##+\s+{re.escape(other)}\s*$", content[match.end() :], flags=re.MULTILINE)
-        if other_match:
-            next_starts.append(match.end() + other_match.start())
-    end = min(next_starts) if next_starts else len(content)
-    return content[match.start() : end]
+
+def strip_numbering_prefix(title: str) -> str:
+    title = clean_heading(title)
+    patterns = [
+        r"^第[一二三四五六七八九十百千万零〇两\d]+[章节篇部]\s*",
+        r"^第\s*[一二三四五六七八九十百千万零〇两\d]+\s*[章节篇部]\s*",
+        r"^(chapter|section)\s+\d+[\s:：.\-—–]*",
+        r"^\d+(\.\d+)*[\s:：.\-—–]+",
+    ]
+    for pattern in patterns:
+        title = re.sub(pattern, "", title, flags=re.IGNORECASE)
+    return title.strip()
+
+
+def normalize_title(title: str) -> str:
+    title = strip_numbering_prefix(title)
+    title = re.sub(r"[*_`#>\[\]（）()]", "", title)
+    title = re.sub(r"[\s\u3000]+", " ", title)
+    title = re.sub(r"^[：:—–\-]+|[：:—–\-]+$", "", title)
+    return title.strip().lower()
+
+
+def extract_headings_and_sections(content: str) -> list[dict]:
+    matches = list(HEADING_RE.finditer(content))
+    sections = []
+    for index, match in enumerate(matches):
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
+        title = clean_heading(match.group(2))
+        sections.append(
+            {
+                "heading": title,
+                "level": len(match.group(1)),
+                "start_line": content[:start].count("\n") + 1,
+                "end_line": content[:end].count("\n") + 1,
+                "text": content[start:end],
+            }
+        )
+    return sections
+
+
+def coverage_candidate_sections(sections: list[dict]) -> list[dict]:
+    ignored = {"目录", "全书核心框架", "金句"}
+    return [section for section in sections if section["level"] >= 2 and section["heading"] not in ignored]
+
+
+def backlinks_in_text(text: str) -> list[str]:
+    return BACKLINK_RE.findall(text)
+
+
+def find_coverage_for_toc_item(toc_item: dict, sections: list[dict]) -> dict:
+    title = toc_item["title"]
+    normalized = normalize_title(title)
+    candidates = coverage_candidate_sections(sections)
+
+    for section in candidates:
+        if section["heading"] == title:
+            return {"covered": True, "matched_by": "exact", "covered_by": section["heading"], "section": section}
+
+    for section in candidates:
+        if normalized and normalize_title(section["heading"]) == normalized:
+            return {"covered": True, "matched_by": "normalized_heading", "covered_by": section["heading"], "section": section}
+
+    for section in candidates:
+        for backlink in backlinks_in_text(section["text"]):
+            if title in backlink or (normalized and normalized in normalize_title(backlink)):
+                return {"covered": True, "matched_by": "backlink", "covered_by": section["heading"], "section": section}
+
+    for section in candidates:
+        if normalized and normalized in normalize_title(section["text"]):
+            return {"covered": True, "matched_by": "keyword", "covered_by": section["heading"], "section": section}
+
+    return {"covered": False, "matched_by": None, "covered_by": None, "section": None}
+
+
+def section_for_title(content: str, title: str, all_titles: list[str] | None = None) -> str:
+    sections = extract_headings_and_sections(content)
+    match = find_coverage_for_toc_item({"title": title}, sections)
+    return match["section"]["text"] if match["covered"] else ""
 
 
 def audit_reading_notes(
@@ -92,16 +160,28 @@ def audit_reading_notes(
     content = reading_notes_path.read_text(encoding="utf-8")
     frontmatter = extract_frontmatter(content)
     missing_fields = [field for field in REQUIRED_FRONTMATTER_FIELDS if field not in frontmatter]
+    sections = extract_headings_and_sections(content)
 
     missing_chapters = []
     missing_core_claim = []
     missing_ai = []
     missing_backlinks = []
+    coverage_details = []
 
     for entry in chapters:
         title = entry["title"]
-        section = section_for_title(content, title, titles)
-        if not section:
+        coverage = find_coverage_for_toc_item(entry, sections)
+        coverage_details.append(
+            {
+                "id": entry["id"],
+                "title": title,
+                "covered": coverage["covered"],
+                "matched_by": coverage["matched_by"],
+                "covered_by": coverage["covered_by"],
+            }
+        )
+        section = coverage["section"]["text"] if coverage["covered"] else ""
+        if not coverage["covered"]:
             missing_chapters.append(entry["id"])
             missing_core_claim.append(entry["id"])
             missing_ai.append(entry["id"])
@@ -119,6 +199,7 @@ def audit_reading_notes(
     report = {
         "reading_notes_exists": True,
         "checked_chapters": len(chapters),
+        "covered_chapters": len(chapters) - len(missing_chapters),
         "filtered_out_count": len(filtered_out),
         "frontmatter_passed": not missing_fields,
         "missing_frontmatter_fields": missing_fields,
@@ -130,6 +211,7 @@ def audit_reading_notes(
         "chapters_missing_ai_analysis": missing_ai,
         "backlinks_passed": not missing_backlinks,
         "chapters_missing_backlinks": missing_backlinks,
+        "coverage_details": coverage_details,
         "has_core_framework": has_core_framework,
         "has_quotes": has_quotes,
     }
