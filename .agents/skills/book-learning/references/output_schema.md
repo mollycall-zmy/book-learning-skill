@@ -77,8 +77,16 @@ created: YYYY-MM-DD
 
 # 📚 《示例书》— 示例作者
 
-> [!info] 全书一句话
-> 用一句话概括本书核心主张。
+<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
+  <div style="background: #FFFFFF; border-radius: 12px; padding: 22px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
+      全书一句话
+    </div>
+    <div style="font-size: 18px; line-height: 1.7; color: #222; font-weight: 600;">
+      这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
+    </div>
+  </div>
+</div>
 
 ## 目录
 
@@ -103,9 +111,33 @@ created: YYYY-MM-DD
 
 ## 全书核心框架
 
-1. 框架 1
-2. 框架 2
-3. 框架 3
+<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
+  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
+    全书核心框架
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用和含义。</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 02</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架二</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架二的作用和含义。</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 03</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架三</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架三的作用和含义。</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 04</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架四</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架四的作用和含义。</div>
+    </div>
+  </div>
+</div>
 
 ## 金句
 
@@ -139,6 +171,30 @@ Formatting constraints:
 - Mermaid blocks must not be indented.
 - Mermaid blocks must have a blank line before the opening fence.
 - Callouts must not contain tables or Mermaid diagrams.
+
+## HTML Card Components
+
+`outputs/reading_notes.md` may contain inline HTML components for high-level visual sections.
+
+Supported components:
+
+- Book one-liner card
+- Process flow card
+- Core framework grid card
+
+Rules:
+
+- HTML must use inline style.
+- Do not use external CSS.
+- Do not use JavaScript.
+- Do not use dark card backgrounds.
+- Do not use heavy shadows.
+- Do not use top border decoration.
+- Do not use full border declarations.
+- Use warm gradient background only on outer containers.
+- Use white cards for content blocks.
+- Use gold gradient only for key process nodes.
+- Keep ordinary chapter notes in Markdown unless visualization improves readability.
 
 ## Reading Notes Audit JSON
 

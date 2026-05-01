@@ -122,8 +122,16 @@ created: YYYY-MM-DD
 
 # 📚 《示例书》— 示例作者
 
-> [!info] 全书一句话
-> 用一句话概括本书核心主张。
+<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
+  <div style="background: #FFFFFF; border-radius: 12px; padding: 22px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
+      全书一句话
+    </div>
+    <div style="font-size: 18px; line-height: 1.7; color: #222; font-weight: 600;">
+      这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
+    </div>
+  </div>
+</div>
 
 ## 目录
 
@@ -152,9 +160,37 @@ created: YYYY-MM-DD
 
 ## 全书核心框架
 
-1. 框架 1
-2. 框架 2
-3. 框架 3
+<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
+  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
+    全书核心框架
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用和含义。</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 02</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架二</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架二的作用和含义。</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 03</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架三</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架三的作用和含义。</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 04</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架四</div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架四的作用和含义。</div>
+    </div>
+  </div>
+  <div style="background: #FFFFFF; border-radius: 12px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">总体关系</div>
+    <div style="font-size: 12px; color: #555; line-height: 1.6;">这里说明这些框架之间的关系，以及它们如何共同构成本书的核心观点。</div>
+  </div>
+</div>
 
 ## 金句
 
@@ -174,6 +210,27 @@ Rules:
 - Long books may be grouped by part, volume, or theme, but no chapter may be omitted.
 - If a chapter is intentionally not expanded, mark the reason explicitly.
 - If the author's argument has an obvious dispute, boundary, or counterexample, mention it briefly after the conclusion or evidence. Do not create a fixed analysis section for every chapter.
+
+### HTML Card Components
+
+Reading notes may use inline HTML cards to improve readability in Markdown and Obsidian.
+
+Use HTML cards mainly for:
+
+- 全书一句话
+- Process flows
+- 全书核心框架
+- Key models or comparison frameworks
+
+Rules:
+
+- The book one-liner should use the warm HTML container instead of a callout.
+- The core framework section should use a grid card when it contains 3-8 major frameworks.
+- Step-based frameworks may use a Flexbox process component.
+- HTML components must use inline style.
+- Do not force every chapter section into HTML.
+- Keep ordinary chapter content in Markdown when that is easier to maintain.
+- Do not use dark card backgrounds, heavy shadows, top border decoration, full border declarations, or large gold areas.
 
 ### Backlink Rules / 双链回链规则
 
@@ -361,7 +418,7 @@ Use this concise report:
 ```markdown
 ### 学习完成报告
 
-- **书名**：《书名》
+- **书名**：《示例书》
 - **规模**：X 万字，Y 个章节
 - **核心收获**：
   1. xxx

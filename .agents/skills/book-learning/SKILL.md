@@ -41,6 +41,7 @@ Use bundled resources as needed:
 
 - Read `references/workflow.md` for the detailed end-to-end workflow and failure handling.
 - Read `references/output_schema.md` before writing TOC files, reading notes, or audit reports.
+- Read `references/html_card_spec.md` before adding inline HTML cards to reading notes.
 - Use `scripts/check_tools.py` to detect optional converters.
 - Use `scripts/convert_to_md.py` for PDF, EPUB, DOCX, and HTML conversion.
 - Use `scripts/extract_toc.py`, `scripts/split_chapters.py`, and `scripts/audit_reading_notes.py` for deterministic structure handling.
