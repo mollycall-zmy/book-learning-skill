@@ -7,6 +7,8 @@ import argparse
 import json
 from pathlib import Path
 
+MIN_NOTE_CHARS = 200
+
 
 def expected_chapter_name(entry: dict) -> str:
     return f"{entry['id']}-{entry['slug']}.md"
@@ -14,6 +16,21 @@ def expected_chapter_name(entry: dict) -> str:
 
 def expected_note_name(entry: dict) -> str:
     return f"{entry['id']}-{entry['slug']}.notes.md"
+
+
+def incomplete_note_names(notes_dir: Path | None, expected_notes: set[str], min_chars: int = MIN_NOTE_CHARS) -> list[str]:
+    if not notes_dir or not notes_dir.exists():
+        return []
+
+    incomplete = []
+    for name in sorted(expected_notes):
+        path = notes_dir / name
+        if not path.exists():
+            continue
+        content = path.read_text(encoding="utf-8").strip()
+        if len(content) < min_chars:
+            incomplete.append(name)
+    return incomplete
 
 
 def audit(toc_path: Path, chapters_dir: Path, notes_dir: Path | None = None) -> dict:
@@ -30,16 +47,23 @@ def audit(toc_path: Path, chapters_dir: Path, notes_dir: Path | None = None) -> 
     missing_chapters = sorted(expected_chapters - actual_chapters)
     extra_chapter_files = sorted(actual_chapters - expected_chapters)
     missing_notes = sorted(expected_notes - actual_notes) if notes_dir else []
+    incomplete_notes = incomplete_note_names(notes_dir, expected_notes - set(missing_notes))
 
-    status = "pass" if not missing_chapters and not extra_chapter_files and not missing_notes else "fail"
+    structural_passed = not missing_chapters and not extra_chapter_files and not missing_notes
+    content_passed = not incomplete_notes
+
+    status = "pass" if structural_passed and content_passed else "fail"
     return {
         "status": status,
+        "structural_passed": structural_passed,
+        "content_passed": content_passed,
         "toc_count": len(entries),
         "chapter_file_count": len(actual_chapters),
         "note_file_count": len(actual_notes),
         "missing_chapters": missing_chapters,
         "extra_chapter_files": extra_chapter_files,
         "missing_notes": missing_notes,
+        "incomplete_notes": incomplete_notes,
     }
 
 

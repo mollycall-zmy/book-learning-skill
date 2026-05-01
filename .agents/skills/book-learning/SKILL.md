@@ -21,6 +21,10 @@ Never skip chapters. If one chapter is missing, re-audit the whole TOC instead o
 
 If a skipped chapter is found, do not only repair that chapter. Re-scan the TOC and all chapter states, then check from the failed chapter through the final chapter for consecutive omissions or structural shifts.
 
+Do not generate a full-book summary or knowledge cards until all in-scope chapters pass both structural audit and content audit.
+
+After all in-scope chapters are studied and cards are generated, report the covered chapters, whether the whole book or a subset was studied, note/card counts, full paths to major outputs, skipped chapters with reasons, and whether structural and content audits passed. For Chinese requests, report these paths in Chinese.
+
 Use bundled resources as needed:
 
 - Read `references/workflow.md` for the detailed end-to-end workflow and failure handling.

@@ -126,9 +126,93 @@ When an Agent finds that a chapter is missing, skipped, lacks notes, or has abno
 
 Example: if Chapter 2 was skipped, also check Chapter 3 through the final chapter instead of only filling Chapter 2.
 
+## Content Audit
+
+After structural audit passes, verify that notes are not empty shells.
+
+A chapter note is considered complete only if it contains at least:
+
+- Core Questions
+- Main Claims
+- Evidence / Cases / Examples
+- Important Details
+- Source Chapter
+
+A chapter note is incomplete if:
+
+- It only contains headings with no substantial content
+- It only repeats the chapter title
+- It has no evidence, cases, examples, data, or argument chain
+- It was generated without actually reading the chapter
+- It is marked as covered only because the chapter file exists
+
+Do not proceed to the full-book summary or knowledge cards if any chapter note is incomplete.
+
+内容性审计不是检查“有没有文件”，而是检查“有没有真正学过”。如果某章笔记只是空壳、标题、模板占位、泛泛摘要，必须标记为 incomplete，并重新阅读该章。
+
+## Completion Criteria
+
+Before generating final knowledge cards, confirm all of the following:
+
+- Every chapter has been read, not just split into a file.
+- Chapter notes exist for every chapter that is in scope.
+- Each chapter note contains meaningful content, not only headings.
+- The full-book summary references content from all major sections, not only the first few chapters.
+- Knowledge cards are generated from complete understanding, not from partial reading.
+- If only a subset of chapters was studied because the user explicitly requested it, clearly mark the scope.
+
+生成知识卡片前必须确认：
+
+- 每一章都已经实际阅读，不只是存在章节文件。
+- 每一章都有有效笔记。
+- 全书总结覆盖所有主要章节。
+- 知识卡片必须来自完整理解，而不是只读前几章后的局部总结。
+
+If the user explicitly asks to study only part of the book, generate cards only for that range and state:
+
+```text
+以下卡片仅覆盖第 X 章至第 Y 章，未覆盖全书。
+```
+
 ## Step 8: Create Knowledge Cards
 
 Read `references/card_rules.md` first. Each card must contain exactly one idea and cite its source chapter.
+
+## Step 9: Completion Report
+
+After all artifacts are created, report to the user:
+
+1. Raw source location: where the original or converted source file is stored.
+2. Chapter coverage: which chapters were covered.
+3. Chapter notes: how many notes were created and where they are stored.
+4. Full-book summary: path to the summary file.
+5. Knowledge cards: list each card with its path.
+6. Audit result: whether structural and content audits passed.
+7. Skipped chapters: list any skipped chapters and explain why.
+8. Index updates: if any index was updated, mention the path.
+
+Example:
+
+```text
+学习完成！归档路径如下：
+
+- 原文：`raw/books/书名.md`
+- 目录树：`outputs/toc.json`
+- 章节拆分：`outputs/chapters/`
+- 章节笔记：共 12 篇，位于 `outputs/notes/`
+- 全书摘要：`outputs/book_summary.md`
+- 知识卡片：共 8 张，位于 `knowledge_cards/`
+  - `knowledge_cards/001-xxx.md`
+  - `knowledge_cards/002-xxx.md`
+- 审计结果：结构性审计通过，内容性审计通过
+- 跳过章节：无
+```
+
+If only part of the book was studied, explicitly write:
+
+```text
+本次只覆盖第 X 章至第 Y 章，未覆盖全书。
+```
 
 ## Failure Handling
 
