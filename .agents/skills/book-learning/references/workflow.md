@@ -132,21 +132,19 @@ created: YYYY-MM-DD
 
 ## 第一章 示例章节
 
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书#第一章 示例章节|🔗]]
 
 **关键框架**：
 
-- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。
-- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。
+- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
+- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
 
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书#第一章 示例章节|🔗]]
 
 **支撑证据**：
 
 - 证据 1：最有力的数据、研究、案例或原文论证。
 - 证据 2：如果有第二个强证据，再补充；不要罗列弱故事。
-
-**来源回链**：[[raw/books/示例书.md#第一章 示例章节]]
 
 ## 第二章 示例章节
 
@@ -177,27 +175,110 @@ Rules:
 - If a chapter is intentionally not expanded, mark the reason explicitly.
 - If the author's argument has an obvious dispute, boundary, or counterexample, mention it briefly after the conclusion or evidence. Do not create a fixed analysis section for every chapter.
 
-## Backlink Rule
+### Backlink Rules / 双链回链规则
 
-Key chapter points in `outputs/reading_notes.md` must include Obsidian-style backlinks to the raw source:
+Every chapter section in `outputs/reading_notes.md` must include backlinks to the raw source text.
+
+Use Obsidian pipe syntax:
 
 ```text
-[[raw/books/示例书.md#章节标题]]
+[[raw/books/{书名}#{章节标题}|🔗]]
 ```
 
 Rules:
 
-- Each chapter must include at least one backlink to the original chapter.
-- Prefer backlinks near key concepts, important quotes, and named cases.
-- Do not link every sentence; avoid noisy notes.
-- If the original heading is not a stable anchor, use the closest chapter heading.
-- If the user does not use Obsidian, keep this format as a readable source marker.
+- Each chapter section must contain at least one backlink to the raw source.
+- Recommended density: 3-5 backlinks per chapter section.
+- `核心定义/主张` should include a backlink at the end.
+- `核心结论` should include a backlink at the end.
+- If `关键框架` exists, each framework item should include a backlink.
+- `支撑证据` does not require backlinks, but may include them when useful.
+- If a chapter has no distinct framework, one backlink in `核心定义/主张` is sufficient.
+- Backlink target should point to the closest heading in the raw Markdown source.
+- Do not add backlinks to `全书核心框架` or `金句`.
+- Do not over-link every sentence; keep source links useful and readable.
+
+Example:
+
+```markdown
+**核心定义/主张**：本章指出，关键概念的含义不清会导致论证失效。[[raw/books/示例书#第一章 示例章节|🔗]]
+
+**关键框架**：
+
+- **框架一**：用于识别概念是否存在歧义。[[raw/books/示例书#子节标题|🔗]]
+- **框架二**：用于判断证据是否足够支撑结论。[[raw/books/示例书#子节标题|🔗]]
+
+**核心结论**：理解作者的核心概念，是判断一段论证是否成立的前提。[[raw/books/示例书#第一章 示例章节|🔗]]
+```
 
 Purpose:
 
 - Make source navigation possible.
 - Preserve source traceability.
 - Prevent reading notes from drifting away from the original text.
+
+### Table & Visualization Formatting / 表格与可视化格式
+
+Reading notes may include tables, Mermaid diagrams, and Obsidian callouts. These must follow strict formatting rules to render correctly.
+
+Table Rules:
+
+- Tables must start at the beginning of the line.
+- Tables must not be indented.
+- Tables must have a blank line before them.
+- Do not place tables inside list items.
+- Do not place tables inside callout blocks.
+- If a callout needs a table, put the callout title first, then put the table outside the callout.
+
+Correct:
+
+```markdown
+**关键框架**：
+
+> [!tip] 核心对比
+
+| 概念 A | 概念 B |
+|-------|-------|
+| 特点 1 | 特点 2 |
+```
+
+Wrong:
+
+```markdown
+- **关键框架**：
+  | 概念 A | 概念 B |
+  |-------|-------|
+```
+
+Mermaid Rules:
+
+- Mermaid code blocks must start at the beginning of the line.
+- There must be a blank line before the opening fence.
+- Do not place Mermaid diagrams inside lists or callouts.
+
+Correct:
+
+````markdown
+**流程示意**：
+
+```mermaid
+flowchart TD
+  A --> B
+```
+````
+
+Callout Rules:
+
+- Callouts may contain text.
+- Callouts should not contain tables or Mermaid diagrams.
+- Put the table or Mermaid block outside the callout.
+
+When to use visualizations:
+
+- Tables: comparing concepts, categories, types, evidence strength.
+- Mermaid flowcharts: processes, decision paths, cause-effect chains.
+- Mermaid mindmaps: concept hierarchies.
+- Callouts: core definitions, warnings, key insights.
 
 ## Important Detail Retention
 
@@ -227,7 +308,7 @@ Rules:
 1. Do not create independent reading note sections for sidebars / boxes by default.
 2. Integrate important sidebar / box content into the nearest relevant main chapter.
 3. If a sidebar contains a model, framework, matrix, table, or important example, summarize it under the corresponding chapter's `关键要点` or `补充说明`.
-4. Keep source traceability with backlinks, for example: `[[raw/books/示例书.md#方框3.1 标题]]`.
+4. Keep source traceability with backlinks, for example: `[[raw/books/示例书#方框3.1 标题|🔗]]`.
 5. If a sidebar is irrelevant, repetitive, or purely decorative, it may be skipped, but the Agent should not treat it as a missing chapter.
 6. If the user explicitly asks to preserve all sidebars, include them as sub-bullets under the related chapter, not as top-level chapters.
 
@@ -254,7 +335,7 @@ Check:
 3. All in-scope TOC chapter titles appear in the note.
 4. Every chapter has `核心定义/主张` or `核心主张`.
 5. Every chapter has `核心结论`.
-6. Every chapter has at least one backlink like `[[raw/books/示例书.md#章节标题]]`.
+6. Every chapter has at least one backlink like `[[raw/books/示例书#章节标题|🔗]]`.
 7. The note contains `全书核心框架`.
 8. The note contains `金句`.
 
@@ -287,7 +368,7 @@ Use this concise report:
   2. xxx
   3. xxx
 - **文件**：
-  - 原文：`raw/books/示例书.md`
+  - 原文：`raw/books/示例书`
   - 笔记：`outputs/reading_notes.md`
   - 如果已归档到知识库：`L1-事实与语义/02-📚 知识/书名-阅读笔记.md`
 - **审计**：PASS / FAIL + 原因

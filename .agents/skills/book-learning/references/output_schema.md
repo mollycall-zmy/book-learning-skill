@@ -87,21 +87,19 @@ created: YYYY-MM-DD
 
 ## 第一章 示例章节
 
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书#第一章 示例章节|🔗]]
 
 **关键框架**：
 
-- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。
-- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。
+- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
+- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
 
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书#第一章 示例章节|🔗]]
 
 **支撑证据**：
 
 - 证据 1：最有力的数据、研究、案例或原文论证。
 - 证据 2：如果有第二个强证据，再补充；不要罗列弱故事。
-
-**来源回链**：[[raw/books/示例书.md#第一章 示例章节]]
 
 ## 全书核心框架
 
@@ -117,13 +115,30 @@ created: YYYY-MM-DD
 Rules:
 
 - Every in-scope chapter must appear in this file.
+
+Reading Notes Section Schema:
+
 - Every chapter must include `核心定义/主张` or `核心主张`.
 - Every chapter must include `核心结论`.
 - Every chapter must include at least one backlink to the raw source.
+- `核心定义/主张` must include a backlink: `[[raw/books/{书名}#{标题}|🔗]]`.
+- `核心结论` should include a backlink.
 - `关键框架` is required when the chapter contains a model, method, classification, process, or structure.
+- If `关键框架` is present, each item should include a backlink.
 - `支撑证据` is required when the chapter contains research, data, cases, or a clear argument chain.
+- `支撑证据` does not require backlinks.
 - Do not invent frameworks or evidence just to fill a field.
 - Long books may be grouped by part, section, or theme, but chapters must not be omitted.
+
+Formatting constraints:
+
+- Tables must not be indented.
+- Tables must have a blank line before them.
+- Tables must not be inside list items.
+- Tables must not be inside callout blocks.
+- Mermaid blocks must not be indented.
+- Mermaid blocks must have a blank line before the opening fence.
+- Callouts must not contain tables or Mermaid diagrams.
 
 ## Reading Notes Audit JSON
 
@@ -142,6 +157,7 @@ Rules:
   "chapters_missing_core_conclusion": [],
   "backlinks_passed": true,
   "chapters_missing_backlinks": [],
+  "format_issues": [],
   "has_core_framework": true,
   "has_quotes": true,
   "passed": true

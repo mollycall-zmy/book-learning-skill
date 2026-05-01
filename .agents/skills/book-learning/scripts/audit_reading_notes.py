@@ -89,6 +89,62 @@ def backlinks_in_text(text: str) -> list[str]:
     return BACKLINK_RE.findall(text)
 
 
+def is_table_row(line: str) -> bool:
+    stripped = line.strip()
+    return stripped.startswith("|") and stripped.endswith("|") and "|" in stripped[1:-1]
+
+
+def check_table_formatting(content: str) -> list[str]:
+    """Check common table formatting issues that break rendering."""
+    issues = []
+    lines = content.split("\n")
+
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        table_row = is_table_row(line)
+
+        if line.lstrip().startswith("> |") and "|" in line:
+            issues.append(f"Line {index + 1}: table row appears inside a callout block")
+
+        if table_row:
+            if line != stripped:
+                issues.append(f"Line {index + 1}: table row is indented and may not render correctly")
+
+            if index > 0:
+                previous = lines[index - 1].strip()
+                if previous.startswith("- ") or previous.startswith("* "):
+                    issues.append(f"Line {index + 1}: table row immediately follows a list item; add a blank line before the table")
+
+    return issues
+
+
+def check_mermaid_formatting(content: str) -> list[str]:
+    """Check common Mermaid formatting issues that break rendering."""
+    issues = []
+    lines = content.split("\n")
+
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if line.lstrip().startswith("> ```mermaid"):
+            issues.append(f"Line {index + 1}: Mermaid block appears inside a callout block")
+            continue
+
+        if stripped != "```mermaid":
+            continue
+
+        if line != stripped:
+            issues.append(f"Line {index + 1}: Mermaid block is indented and may not render correctly")
+
+        if index > 0 and lines[index - 1].strip():
+            issues.append(f"Line {index + 1}: add a blank line before the Mermaid block")
+
+    return issues
+
+
+def check_formatting(content: str) -> list[str]:
+    return check_table_formatting(content) + check_mermaid_formatting(content)
+
+
 def find_coverage_for_toc_item(toc_item: dict, sections: list[dict], ambiguous_normalized_titles: set[str] | None = None) -> dict:
     title = toc_item["title"]
     normalized = normalize_title(title)
@@ -163,6 +219,7 @@ def audit_reading_notes(
             "chapters_missing_core_conclusion": [entry["id"] for entry in chapters],
             "backlinks_passed": False,
             "chapters_missing_backlinks": [entry["id"] for entry in chapters],
+            "format_issues": [],
             "has_core_framework": False,
             "has_quotes": False,
             "passed": False,
@@ -208,6 +265,7 @@ def audit_reading_notes(
     heading_titles = {section["heading"] for section in sections}
     has_core_framework = "全书核心框架" in heading_titles
     has_quotes = "金句" in heading_titles
+    format_issues = check_formatting(content)
     report = {
         "reading_notes_exists": True,
         "checked_chapters": len(chapters),
@@ -223,6 +281,7 @@ def audit_reading_notes(
         "chapters_missing_core_conclusion": missing_core_conclusion,
         "backlinks_passed": not missing_backlinks,
         "chapters_missing_backlinks": missing_backlinks,
+        "format_issues": format_issues,
         "coverage_details": coverage_details,
         "has_core_framework": has_core_framework,
         "has_quotes": has_quotes,
