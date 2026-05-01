@@ -1,11 +1,11 @@
 ---
 name: book-learning
-description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by preserving the table of contents, splitting chapters, producing chapter-by-chapter SQ3R notes, auditing omissions, and generating traceable atomic knowledge cards. Use when the user asks to study, digest, summarize, or build a knowledge base from a whole book or long manuscript, including Chinese requests such as 学习这本书, 喂你一本书, 帮我学习这本书, 把这本书整理成知识卡片, 逐章消化这本 PDF, 读一下这个 EPUB, 逐章做笔记, 提取知识卡片, 检查章节遗漏, or 建立知识库.
+description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by preserving the table of contents, splitting chapters, producing chapter-by-chapter SQ3R notes, auditing omissions, and generating traceable atomic knowledge cards. Use when the user asks to study, digest, summarize, or build a knowledge base from a whole book or long manuscript, including Chinese requests such as 喂你一本书, 学习这本书, 帮我逐章消化这个 PDF, 读一下这个 EPUB, 把这本书整理成知识卡片, 逐章做笔记, 提取知识卡片, 检查章节遗漏, or 建立知识库.
 ---
 
 # Book Learning
 
-Chinese trigger examples: `学习这本书`, `喂你一本书`, `帮我学习这本书`, `把这本书整理成知识卡片`, `逐章消化这本 PDF`, `读一下这个 EPUB`, `帮我逐章做笔记`, `先提取目录树`, `生成原子知识卡片`, `检查章节有没有遗漏`.
+Chinese trigger examples: `喂你一本书`, `学习这本书`, `帮我逐章消化这个 PDF`, `读一下这个 EPUB`, `把这本书整理成知识卡片`, `逐章做笔记`, `先提取目录树`, `生成原子知识卡片`, `检查章节有没有遗漏`.
 
 Follow this order strictly:
 
@@ -18,6 +18,8 @@ Follow this order strictly:
 7. Only after a clean audit, write the full-book summary and atomic knowledge cards.
 
 Never skip chapters. If one chapter is missing, re-audit the whole TOC instead of patching only the visible gap.
+
+If a skipped chapter is found, do not only repair that chapter. Re-scan the TOC and all chapter states, then check from the failed chapter through the final chapter for consecutive omissions or structural shifts.
 
 Use bundled resources as needed:
 

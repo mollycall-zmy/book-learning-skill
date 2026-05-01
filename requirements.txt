@@ -1,5 +1,12 @@
 # Optional dependencies for conversion scripts.
 # Install only what your source formats require.
+#
+# pymupdf4llm: PDF -> Markdown conversion.
 pymupdf4llm>=0.0.17
+#
+# pypandoc_binary: optional fallback when system pandoc is unavailable.
+# System pandoc is still preferred for EPUB / DOCX / HTML conversion.
 pypandoc_binary>=1.13
+#
+# ocrmypdf: optional OCR tool for scanned PDFs. It may require system OCR dependencies.
 ocrmypdf>=16.0.0

@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import shutil
 import subprocess
+import sys
 from dataclasses import asdict, dataclass
 
 
@@ -58,9 +60,70 @@ def check_tools() -> list[ToolStatus]:
     return statuses
 
 
+def install_python_package(package: str) -> ToolStatus:
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", package],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return ToolStatus(package, True, "Installed with pip.")
+
+    detail = (result.stderr or result.stdout).strip()
+    if not detail:
+        detail = "pip install failed without output."
+    return ToolStatus(package, False, f"Install failed: {detail}")
+
+
+def install_missing_tools(statuses: list[ToolStatus]) -> list[ToolStatus]:
+    install_results = []
+    by_name = {status.name: status for status in statuses}
+
+    if not by_name["pymupdf4llm"].available:
+        install_results.append(install_python_package("pymupdf4llm"))
+
+    if not by_name["pandoc"].available:
+        if not python_module_available("pypandoc"):
+            install_results.append(install_python_package("pypandoc_binary"))
+        install_results.append(
+            ToolStatus(
+                "pandoc",
+                False,
+                "System pandoc is preferred for EPUB/DOCX/HTML. pypandoc_binary is a Python fallback, not a guaranteed equivalent in every environment.",
+            )
+        )
+
+    if not by_name["ocrmypdf"].available:
+        install_results.append(
+            ToolStatus(
+                "ocrmypdf",
+                False,
+                "Optional OCR tool for scanned PDFs. Not installed automatically; install manually if needed.",
+            )
+        )
+
+    return install_results
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Detect optional tools for the book learning workflow.")
+    parser.add_argument("--install", action="store_true", help="Attempt conservative installation of missing Python packages.")
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     statuses = check_tools()
-    print(json.dumps([asdict(status) for status in statuses], ensure_ascii=False, indent=2))
+    payload = {"tools": [asdict(status) for status in statuses]}
+
+    if args.install:
+        install_results = install_missing_tools(statuses)
+        statuses = check_tools()
+        payload["install_results"] = [asdict(status) for status in install_results]
+        payload["tools_after_install"] = [asdict(status) for status in statuses]
+
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0 if all(status.available for status in statuses if status.name != "ocrmypdf") else 1
 
 
