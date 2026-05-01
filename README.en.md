@@ -1,5 +1,7 @@
 # book-learning-skill
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 An Agent Skill for learning a whole book through a structured workflow: convert the source, preserve the table of contents, read chapter by chapter, audit for omissions, and produce traceable atomic knowledge cards.
 
 This repository does not include real books, PDFs, EPUBs, copyrighted excerpts, or private user files.
@@ -58,6 +60,29 @@ python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_b
 python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
 ```
 
+## Testing With Your Own PDF / EPUB
+
+This repository does not include real PDF, EPUB, DOCX, or other book samples. Prepare a file that you legally own and are allowed to process locally, then place it under `raw/books/`. That directory is ignored by git and should not be committed.
+
+Conversion examples:
+
+```bash
+python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-book.pdf --out outputs/my-book.md
+python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-book.epub --out outputs/my-book.md
+python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-book.docx --out outputs/my-book.md
+python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-page.html --out outputs/my-page.md
+```
+
+Then continue with structure extraction:
+
+```bash
+python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/my-book.md --out outputs/toc.json
+python3 .agents/skills/book-learning/scripts/split_chapters.py outputs/my-book.md --toc outputs/toc.json --out outputs/chapters
+python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
+```
+
+If a converter is missing, run `check_tools.py` to inspect your environment. v0.1.1 does not install dependencies automatically.
+
 ## Local Tests
 
 Run the test suite:
@@ -78,3 +103,17 @@ Do not commit:
 - Generated knowledge bases from copyrighted books
 
 Commit only Skill instructions, scripts, templates, synthetic examples, and tests.
+
+## Roadmap
+
+Planned for v0.2.0:
+
+- Add a `--install` option to `check_tools.py` for optional dependency installation guidance
+- Generate chapter note skeletons automatically
+- Orchestrate OCR workflows for scanned PDFs
+- Add resumable progress tracking with `progress.json`
+- Improve TOC detection for non-standard Markdown headings
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for issue, PR, testing, copyright, and style guidelines.
