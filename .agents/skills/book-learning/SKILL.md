@@ -1,0 +1,30 @@
+---
+name: book-learning
+description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by preserving the table of contents, splitting chapters, producing chapter-by-chapter SQ3R notes, auditing omissions, and generating traceable atomic knowledge cards. Use when the user asks to study, digest, summarize, or build a knowledge base from a whole book or long manuscript.
+---
+
+# Book Learning
+
+Follow this order strictly:
+
+1. Store original user files under `raw/books/` and do not modify them.
+2. Convert the source to Markdown if needed.
+3. Extract a table of contents with heading levels and line ranges.
+4. Split the Markdown into chapters from the TOC.
+5. Read every chapter and create structured SQ3R notes.
+6. Audit TOC, chapter files, and notes for omissions.
+7. Only after a clean audit, write the full-book summary and atomic knowledge cards.
+
+Never skip chapters. If one chapter is missing, re-audit the whole TOC instead of patching only the visible gap.
+
+Use bundled resources as needed:
+
+- Read `references/workflow.md` for the detailed end-to-end workflow and failure handling.
+- Read `references/output_schema.md` before writing TOC files, chapter notes, summaries, audit reports, or card indexes.
+- Read `references/card_rules.md` before creating atomic knowledge cards.
+- Use `scripts/check_tools.py` to detect optional converters.
+- Use `scripts/convert_to_md.py` for PDF, EPUB, DOCX, and HTML conversion.
+- Use `scripts/extract_toc.py`, `scripts/split_chapters.py`, and `scripts/audit_chapters.py` for deterministic structure handling.
+- Use `assets/` templates for notes, summaries, cards, TOCs, and audit reports.
+
+Do not commit real books, PDFs, EPUBs, OCR output, private files, or generated knowledge bases.

@@ -1,0 +1,5 @@
+# Optional dependencies for conversion scripts.
+# Install only what your source formats require.
+pymupdf4llm>=0.0.17
+pypandoc_binary>=1.13
+ocrmypdf>=16.0.0
