@@ -5,6 +5,10 @@ description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by pre
 
 # Book Learning
 
+The goal is to distill the book into useful reading notes: definitions, frameworks, conclusions, and supporting evidence. The output should help someone who has not read the book quickly understand what the book actually says.
+
+This is not a generic summary, not performative analysis, and not automatic knowledge-card generation.
+
 Chinese trigger examples: `喂你一本书`, `学习这本书`, `帮我逐章消化这个 PDF`, `读一下这个 EPUB`, `逐章做笔记`, `先提取目录树`, `生成读书笔记`, `整理成阅读笔记`.
 
 Follow this order strictly:
@@ -14,7 +18,7 @@ Follow this order strictly:
 3. Extract a table of contents with heading levels and line ranges.
 4. Split the Markdown into chapters from the TOC.
 5. Read every in-scope chapter and write all chapter notes into one `outputs/reading_notes.md`.
-6. Audit `outputs/reading_notes.md` for chapter coverage, AI analysis, backlinks, and required sections.
+6. Audit `outputs/reading_notes.md` for chapter coverage, core definition / claim, core conclusion, backlinks, and required sections.
 7. Report the final raw source path, reading note path, audit status, coverage, and key takeaways.
 
 Never skip chapters. If one chapter is missing, re-audit the whole TOC instead of patching only the visible gap.
@@ -22,6 +26,14 @@ Never skip chapters. If one chapter is missing, re-audit the whole TOC instead o
 If a skipped chapter is found, do not only repair that chapter. Re-scan the TOC and all chapter states, then check from the failed chapter through the final chapter for consecutive omissions or structural shifts.
 
 Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, or `knowledge_cards/`. Knowledge cards are optional only when the user explicitly asks for them after reading.
+
+Each chapter section should focus on:
+
+- Core Definition / Claim
+- Key Framework
+- Core Conclusion
+- Supporting Evidence
+- Source Backlink
 
 Do not finish until all in-scope chapters are represented in `outputs/reading_notes.md` and the reading-note audit passes. For Chinese requests, report the output paths and learning summary in Chinese.
 

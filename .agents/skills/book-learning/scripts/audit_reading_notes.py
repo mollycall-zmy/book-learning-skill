@@ -14,7 +14,8 @@ from extract_toc import main_chapters_from_toc  # noqa: E402
 
 
 REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created")
-AI_MARKERS = ("AI 分析", "AI Analysis")
+CORE_CLAIM_MARKERS = ("核心定义/主张", "核心主张")
+CORE_CONCLUSION_MARKERS = ("核心结论",)
 BACKLINK_RE = re.compile(r"\[\[raw/books/[^#\]]+#[^\]]+\]\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
 
@@ -88,27 +89,31 @@ def backlinks_in_text(text: str) -> list[str]:
     return BACKLINK_RE.findall(text)
 
 
-def find_coverage_for_toc_item(toc_item: dict, sections: list[dict]) -> dict:
+def find_coverage_for_toc_item(toc_item: dict, sections: list[dict], ambiguous_normalized_titles: set[str] | None = None) -> dict:
     title = toc_item["title"]
     normalized = normalize_title(title)
+    ambiguous_normalized_titles = ambiguous_normalized_titles or set()
+    normalized_is_ambiguous = normalized in ambiguous_normalized_titles
     candidates = coverage_candidate_sections(sections)
 
     for section in candidates:
         if section["heading"] == title:
             return {"covered": True, "matched_by": "exact", "covered_by": section["heading"], "section": section}
 
-    for section in candidates:
-        if normalized and normalize_title(section["heading"]) == normalized:
-            return {"covered": True, "matched_by": "normalized_heading", "covered_by": section["heading"], "section": section}
+    if not normalized_is_ambiguous:
+        for section in candidates:
+            if normalized and normalize_title(section["heading"]) == normalized:
+                return {"covered": True, "matched_by": "normalized_heading", "covered_by": section["heading"], "section": section}
 
     for section in candidates:
         for backlink in backlinks_in_text(section["text"]):
-            if title in backlink or (normalized and normalized in normalize_title(backlink)):
+            if title in backlink or (not normalized_is_ambiguous and normalized and normalized in normalize_title(backlink)):
                 return {"covered": True, "matched_by": "backlink", "covered_by": section["heading"], "section": section}
 
-    for section in candidates:
-        if normalized and normalized in normalize_title(section["text"]):
-            return {"covered": True, "matched_by": "keyword", "covered_by": section["heading"], "section": section}
+    if not normalized_is_ambiguous:
+        for section in candidates:
+            if normalized and normalized in normalize_title(section["text"]):
+                return {"covered": True, "matched_by": "keyword", "covered_by": section["heading"], "section": section}
 
     return {"covered": False, "matched_by": None, "covered_by": None, "section": None}
 
@@ -136,6 +141,12 @@ def audit_reading_notes(
         include_toc_heading=False,
     )
     titles = [entry["title"] for entry in chapters]
+    normalized_counts: dict[str, int] = {}
+    for title in titles:
+        normalized = normalize_title(title)
+        if normalized:
+            normalized_counts[normalized] = normalized_counts.get(normalized, 0) + 1
+    ambiguous_normalized_titles = {title for title, count in normalized_counts.items() if count > 1}
 
     if not reading_notes_path.exists():
         return {
@@ -148,8 +159,8 @@ def audit_reading_notes(
             "missing_chapters": [entry["id"] for entry in chapters],
             "core_claims_passed": False,
             "chapters_missing_core_claim": [entry["id"] for entry in chapters],
-            "ai_analysis_passed": False,
-            "chapters_missing_ai_analysis": [entry["id"] for entry in chapters],
+            "core_conclusions_passed": False,
+            "chapters_missing_core_conclusion": [entry["id"] for entry in chapters],
             "backlinks_passed": False,
             "chapters_missing_backlinks": [entry["id"] for entry in chapters],
             "has_core_framework": False,
@@ -164,13 +175,13 @@ def audit_reading_notes(
 
     missing_chapters = []
     missing_core_claim = []
-    missing_ai = []
+    missing_core_conclusion = []
     missing_backlinks = []
     coverage_details = []
 
     for entry in chapters:
         title = entry["title"]
-        coverage = find_coverage_for_toc_item(entry, sections)
+        coverage = find_coverage_for_toc_item(entry, sections, ambiguous_normalized_titles)
         coverage_details.append(
             {
                 "id": entry["id"],
@@ -184,18 +195,19 @@ def audit_reading_notes(
         if not coverage["covered"]:
             missing_chapters.append(entry["id"])
             missing_core_claim.append(entry["id"])
-            missing_ai.append(entry["id"])
+            missing_core_conclusion.append(entry["id"])
             missing_backlinks.append(entry["id"])
             continue
-        if "核心主张" not in section:
+        if not any(marker in section for marker in CORE_CLAIM_MARKERS):
             missing_core_claim.append(entry["id"])
-        if not any(marker in section for marker in AI_MARKERS):
-            missing_ai.append(entry["id"])
+        if not any(marker in section for marker in CORE_CONCLUSION_MARKERS):
+            missing_core_conclusion.append(entry["id"])
         if not BACKLINK_RE.search(section):
             missing_backlinks.append(entry["id"])
 
-    has_core_framework = "全书核心框架" in content
-    has_quotes = "金句" in content
+    heading_titles = {section["heading"] for section in sections}
+    has_core_framework = "全书核心框架" in heading_titles
+    has_quotes = "金句" in heading_titles
     report = {
         "reading_notes_exists": True,
         "checked_chapters": len(chapters),
@@ -207,8 +219,8 @@ def audit_reading_notes(
         "missing_chapters": missing_chapters,
         "core_claims_passed": not missing_core_claim,
         "chapters_missing_core_claim": missing_core_claim,
-        "ai_analysis_passed": not missing_ai,
-        "chapters_missing_ai_analysis": missing_ai,
+        "core_conclusions_passed": not missing_core_conclusion,
+        "chapters_missing_core_conclusion": missing_core_conclusion,
         "backlinks_passed": not missing_backlinks,
         "chapters_missing_backlinks": missing_backlinks,
         "coverage_details": coverage_details,
@@ -221,7 +233,7 @@ def audit_reading_notes(
             report["frontmatter_passed"],
             report["chapter_coverage_passed"],
             report["core_claims_passed"],
-            report["ai_analysis_passed"],
+            report["core_conclusions_passed"],
             report["backlinks_passed"],
             report["has_core_framework"],
             report["has_quotes"],

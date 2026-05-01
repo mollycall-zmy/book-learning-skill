@@ -75,9 +75,9 @@ Run `split_chapters.py` using the TOC JSON if chapter-sized processing is needed
 
 Use deterministic filenames based on chapter id and a slugified title.
 
-## Step 4: Read Chapter By Chapter Into One Note
+## Step 4: Chapter Distillation
 
-Read every in-scope chapter, but write the result into a single consolidated file:
+Read every in-scope chapter, but write concise, high-density notes into one consolidated file:
 
 ```text
 outputs/reading_notes.md
@@ -85,45 +85,70 @@ outputs/reading_notes.md
 
 Do not create default per-chapter `.notes.md` files. All chapters must appear in one reading note.
 
+Each chapter note should help a reader who has not read the book quickly understand what the book says.
+
+Focus on:
+
+1. Core Definition / Claim
+   - What is the key idea of this chapter?
+   - What does the author define, assert, or clarify?
+   - Use 1-2 sentences.
+2. Key Framework
+   - What model, method, classification, process, or structure does the chapter provide?
+   - Use bullets or a small table.
+   - This is the highest-value part of the reading note.
+   - If the chapter has no real framework, omit this part instead of inventing one.
+3. Core Conclusion
+   - What is the author's most important conclusion in this chapter?
+   - Use 1-2 sentences.
+4. Supporting Evidence
+   - What is the strongest evidence behind the conclusion?
+   - Keep only the strongest 1-2 items.
+   - Evidence may include research, data, cases, named examples, or a clear argument chain.
+   - Do not list every story.
+5. Source Backlink
+   - Each chapter note should include at least one backlink to the raw source.
+
 Use this structure:
 
 ```markdown
 ---
-aliases: [书名别名]
+aliases: [示例书]
 tags: [书籍, 分类]
-author: 作者名
-source: "[[raw/books/书名]]"
+author: 示例作者
+source: "[[raw/books/示例书]]"
 created: YYYY-MM-DD
 ---
 
-# 📚 《书名》— 作者
+# 📚 《示例书》— 示例作者
 
 > [!info] 全书一句话
 > 用一句话概括本书核心主张。
 
 ## 目录
 
-- [[#第一章 标题]]
-- [[#第二章 标题]]
+- [[#第一章 示例章节]]
+- [[#第二章 示例章节]]
 
-## 第一章 标题
+## 第一章 示例章节
 
-**核心主张**：一句话概括本章。
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。
 
-**关键要点**：
+**关键框架**：
 
-- 要点 1（[[raw/books/书名#第一章 标题]]）
-- 要点 2
-- 要点 3
+- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。
+- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。
 
-**AI 分析**：
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。
 
-- **跨界关联**：这个观点和其他书籍、领域、框架有什么关联？
-- **适用边界**：什么时候有效，什么时候失效？
-- **批判性思考**：作者没说的、可能有问题的、可能存在的反例。
-- **一句话提炼**：本章最值得带走的一句话。
+**支撑证据**：
 
-## 第二章 标题
+- 证据 1：最有力的数据、研究、案例或原文论证。
+- 证据 2：如果有第二个强证据，再补充；不要罗列弱故事。
+
+**来源回链**：[[raw/books/示例书.md#第一章 示例章节]]
+
+## 第二章 示例章节
 
 同上。
 
@@ -141,35 +166,23 @@ created: YYYY-MM-DD
 Rules:
 
 - Every in-scope chapter must appear in `outputs/reading_notes.md`.
-- Keep each chapter compact; avoid more than 8 complex subsections per chapter.
+- Remove storytelling noise and conversational filler.
+- Do not copy long passages from the book.
+- Do not turn anecdotes into key points unless the underlying concept is extracted.
+- Do not fill template fields mechanically.
+- If a field is not applicable, omit it.
+- Notes should be readable, concise, and dense.
+- Default target length: 15-25 lines per chapter.
 - Long books may be grouped by part, volume, or theme, but no chapter may be omitted.
 - If a chapter is intentionally not expanded, mark the reason explicitly.
-- `AI 分析` / `AI Analysis` is required, not optional.
-
-## AI Analysis Layer
-
-Each chapter must include Agent analysis, not only extraction or paraphrase.
-
-AI Analysis must include:
-
-1. Cross-reference / 跨界关联
-   - Connect the chapter's ideas to other books, fields, frameworks, or general knowledge.
-   - Use broad transferable knowledge, not user-specific company or personal context.
-2. Applicability boundary / 适用边界
-   - State when the idea works, when it may fail, and what assumptions it depends on.
-3. Critique / 批判性思考
-   - Identify blind spots, survivorship bias, sample-selection bias, logic leaps, over-attribution, counterexamples, or alternative explanations.
-4. One-sentence distillation / 一句话提炼
-   - Write the one sentence that would teach the chapter's most important idea to someone who has not read the book.
-
-Do not turn AI Analysis into company-specific consulting. Keep the analysis general, transferable, and reusable.
+- If the author's argument has an obvious dispute, boundary, or counterexample, mention it briefly after the conclusion or evidence. Do not create a fixed analysis section for every chapter.
 
 ## Backlink Rule
 
 Key chapter points in `outputs/reading_notes.md` must include Obsidian-style backlinks to the raw source:
 
 ```text
-[[raw/books/书名#章节标题]]
+[[raw/books/示例书.md#章节标题]]
 ```
 
 Rules:
@@ -214,7 +227,7 @@ Rules:
 1. Do not create independent reading note sections for sidebars / boxes by default.
 2. Integrate important sidebar / box content into the nearest relevant main chapter.
 3. If a sidebar contains a model, framework, matrix, table, or important example, summarize it under the corresponding chapter's `关键要点` or `补充说明`.
-4. Keep source traceability with backlinks, for example: `[[raw/books/书名#方框3.1 标题]]`.
+4. Keep source traceability with backlinks, for example: `[[raw/books/示例书.md#方框3.1 标题]]`.
 5. If a sidebar is irrelevant, repetitive, or purely decorative, it may be skipped, but the Agent should not treat it as a missing chapter.
 6. If the user explicitly asks to preserve all sidebars, include them as sub-bullets under the related chapter, not as top-level chapters.
 
@@ -239,9 +252,9 @@ Check:
 1. `outputs/reading_notes.md` exists.
 2. Frontmatter includes `aliases`, `tags`, `author`, `source`, and `created`.
 3. All in-scope TOC chapter titles appear in the note.
-4. Every chapter has `核心主张`.
-5. Every chapter has `AI 分析` or `AI Analysis`.
-6. Every chapter has at least one backlink like `[[raw/books/书名#章节标题]]`.
+4. Every chapter has `核心定义/主张` or `核心主张`.
+5. Every chapter has `核心结论`.
+6. Every chapter has at least one backlink like `[[raw/books/示例书.md#章节标题]]`.
 7. The note contains `全书核心框架`.
 8. The note contains `金句`.
 
@@ -274,7 +287,7 @@ Use this concise report:
   2. xxx
   3. xxx
 - **文件**：
-  - 原文：`raw/books/书名.md`
+  - 原文：`raw/books/示例书.md`
   - 笔记：`outputs/reading_notes.md`
   - 如果已归档到知识库：`L1-事实与语义/02-📚 知识/书名-阅读笔记.md`
 - **审计**：PASS / FAIL + 原因
@@ -299,7 +312,7 @@ If only part of the book was studied, explicitly write:
 
 - Do not confuse chapter split files with final notes.
 - Do not mark a chapter covered only because its heading exists.
-- Do not skip AI Analysis.
+- Do not hide the book's definitions, frameworks, conclusions, or evidence behind generic commentary.
 - Do not omit backlinks.
 - Do not create many default `.notes.md` files unless the user explicitly asks for that style.
 

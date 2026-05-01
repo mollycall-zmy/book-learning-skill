@@ -68,39 +68,40 @@ Required structure:
 
 ```markdown
 ---
-aliases: [书名别名]
+aliases: [示例书]
 tags: [书籍, 分类]
-author: 作者名
-source: "[[raw/books/书名]]"
+author: 示例作者
+source: "[[raw/books/示例书]]"
 created: YYYY-MM-DD
 ---
 
-# 📚 《书名》— 作者
+# 📚 《示例书》— 示例作者
 
 > [!info] 全书一句话
 > 用一句话概括本书核心主张。
 
 ## 目录
 
-- [[#第一章 标题]]
-- [[#第二章 标题]]
+- [[#第一章 示例章节]]
+- [[#第二章 示例章节]]
 
-## 第一章 标题
+## 第一章 示例章节
 
-**核心主张**：一句话概括本章。
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。
 
-**关键要点**：
+**关键框架**：
 
-- 要点 1（[[raw/books/书名#第一章 标题]]）
-- 要点 2
-- 要点 3
+- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。
+- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。
 
-**AI 分析**：
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。
 
-- **跨界关联**：xxx
-- **适用边界**：xxx
-- **批判性思考**：xxx
-- **一句话提炼**：xxx
+**支撑证据**：
+
+- 证据 1：最有力的数据、研究、案例或原文论证。
+- 证据 2：如果有第二个强证据，再补充；不要罗列弱故事。
+
+**来源回链**：[[raw/books/示例书.md#第一章 示例章节]]
 
 ## 全书核心框架
 
@@ -116,9 +117,12 @@ created: YYYY-MM-DD
 Rules:
 
 - Every in-scope chapter must appear in this file.
-- Every chapter must include at least one core claim.
-- Every chapter must include AI Analysis / AI 分析.
+- Every chapter must include `核心定义/主张` or `核心主张`.
+- Every chapter must include `核心结论`.
 - Every chapter must include at least one backlink to the raw source.
+- `关键框架` is required when the chapter contains a model, method, classification, process, or structure.
+- `支撑证据` is required when the chapter contains research, data, cases, or a clear argument chain.
+- Do not invent frameworks or evidence just to fill a field.
 - Long books may be grouped by part, section, or theme, but chapters must not be omitted.
 
 ## Reading Notes Audit JSON
@@ -134,8 +138,8 @@ Rules:
   "missing_chapters": [],
   "core_claims_passed": true,
   "chapters_missing_core_claim": [],
-  "ai_analysis_passed": true,
-  "chapters_missing_ai_analysis": [],
+  "core_conclusions_passed": true,
+  "chapters_missing_core_conclusion": [],
   "backlinks_passed": true,
   "chapters_missing_backlinks": [],
   "has_core_framework": true,
