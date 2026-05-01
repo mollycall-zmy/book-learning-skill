@@ -12,13 +12,29 @@
       "level": 1,
       "start_line": 10,
       "end_line": 85,
+      "line_count": 76,
       "slug": "chapter-title"
     }
-  ]
+  ],
+  "filtered_out": [
+    {
+      "id": "004",
+      "title": "方框1.1 示例侧栏",
+      "reason": "sidebar_or_box"
+    }
+  ],
+  "filters": {
+    "min_lines": 15,
+    "max_level": 3,
+    "include_sidebars": false,
+    "include_toc_heading": false
+  }
 }
 ```
 
 Line numbers are 1-based and inclusive.
+
+`chapters` should contain main chapters by default. `filtered_out` is retained for debugging and may include TOC headings, sidebars, box fragments, deep headings, short fragments, or decorative headings.
 
 ## Raw Source
 
@@ -110,6 +126,8 @@ Rules:
 ```json
 {
   "reading_notes_exists": true,
+  "checked_chapters": 2,
+  "filtered_out_count": 3,
   "frontmatter_passed": true,
   "missing_frontmatter_fields": [],
   "chapter_coverage_passed": true,

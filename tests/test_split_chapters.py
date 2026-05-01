@@ -26,7 +26,7 @@ class SplitChaptersTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             toc_path = tmp_path / "toc.json"
-            toc = extract_toc.extract_toc(SAMPLE)
+            toc = extract_toc.extract_toc(SAMPLE, min_lines=0, max_level=6, include_sidebars=True, include_toc_heading=True)
             toc_path.write_text(json.dumps(toc), encoding="utf-8")
 
             out_dir = tmp_path / "chapters"

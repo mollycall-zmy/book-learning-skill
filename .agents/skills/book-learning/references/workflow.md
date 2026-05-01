@@ -37,6 +37,22 @@ Run `extract_toc.py` on the Markdown file. The output must include:
 - Start line
 - End line
 
+By default, TOC extraction keeps main chapters and filters out likely non-chapter headings:
+
+- TOC headings containing `目录`
+- Sidebar / box headings starting with `方框`, `Box`, or `Sidebar`
+- Heading level deeper than `--max-level 3`
+- Sections shorter than `--min-lines 15`
+- Empty or decorative headings
+
+Adjust with:
+
+```bash
+python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/book.md --out outputs/toc.json --min-lines 15 --max-level 3
+```
+
+Use `--include-sidebars` only when the user explicitly wants sidebar / box entries preserved as TOC items.
+
 If the Markdown has no headings, stop and ask for a chapter structure or create a proposed structure for user review.
 
 ## Step 2: Review Target Location
@@ -186,6 +202,21 @@ Do not compress these details into generic summary language:
 - Counterexamples
 - Counterintuitive claims
 - Ideas repeated across chapters
+
+### Sidebar / Box Content Handling
+
+Some books contain sidebar, box, appendix-like fragments, or very short sub-sections such as `方框3.1`.
+
+These items should not usually become standalone chapters in `outputs/reading_notes.md`.
+
+Rules:
+
+1. Do not create independent reading note sections for sidebars / boxes by default.
+2. Integrate important sidebar / box content into the nearest relevant main chapter.
+3. If a sidebar contains a model, framework, matrix, table, or important example, summarize it under the corresponding chapter's `关键要点` or `补充说明`.
+4. Keep source traceability with backlinks, for example: `[[raw/books/书名#方框3.1 标题]]`.
+5. If a sidebar is irrelevant, repetitive, or purely decorative, it may be skipped, but the Agent should not treat it as a missing chapter.
+6. If the user explicitly asks to preserve all sidebars, include them as sub-bullets under the related chapter, not as top-level chapters.
 
 ## Omission Repair Rule
 

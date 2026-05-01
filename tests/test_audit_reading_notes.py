@@ -20,8 +20,8 @@ def write_toc(path):
     toc = {
         "source": "raw/books/sample.md",
         "chapters": [
-            {"id": "001", "title": "Chapter One", "level": 2, "start_line": 1, "end_line": 10, "slug": "chapter-one"},
-            {"id": "002", "title": "Chapter Two", "level": 2, "start_line": 11, "end_line": 20, "slug": "chapter-two"},
+            {"id": "001", "title": "Chapter One", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40},
+            {"id": "002", "title": "Chapter Two", "level": 2, "start_line": 41, "end_line": 80, "slug": "chapter-two", "line_count": 40},
         ],
     }
     path.write_text(json.dumps(toc), encoding="utf-8")
@@ -174,6 +174,79 @@ class AuditReadingNotesTest(unittest.TestCase):
             self.assertFalse(report["passed"])
             self.assertFalse(report["has_core_framework"])
             self.assertFalse(report["has_quotes"])
+
+    def test_filtered_toc_items_do_not_require_independent_sections(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            toc = {
+                "source": "raw/books/sample.md",
+                "chapters": [
+                    {"id": "001", "title": "第一章 主章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40},
+                    {"id": "002", "title": "方框1.1 示例侧栏", "level": 3, "start_line": 41, "end_line": 60, "slug": "box", "line_count": 20},
+                    {"id": "003", "title": "短碎片标题", "level": 3, "start_line": 61, "end_line": 65, "slug": "short", "line_count": 5},
+                    {"id": "004", "title": "第二章 主章节", "level": 2, "start_line": 66, "end_line": 105, "slug": "chapter-two", "line_count": 40},
+                ],
+            }
+            toc_path.write_text(json.dumps(toc), encoding="utf-8")
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(
+                """---
+aliases: [示例书]
+tags: [书籍, 测试]
+author: 示例作者
+source: "[[raw/books/示例书]]"
+created: 2026-05-01
+---
+
+# 📚 《示例书》— 示例作者
+
+## 第一章 主章节
+
+**核心主张**：第一章核心主张。
+
+**关键要点**：
+- 要点（[[raw/books/示例书#第一章 主章节]]）
+
+**AI 分析**：
+- **跨界关联**：通用关联。
+- **适用边界**：通用边界。
+- **批判性思考**：通用批判。
+- **一句话提炼**：通用提炼。
+
+## 第二章 主章节
+
+**核心主张**：第二章核心主张。
+
+**关键要点**：
+- 要点（[[raw/books/示例书#第二章 主章节]]）
+
+**AI 分析**：
+- **跨界关联**：通用关联。
+- **适用边界**：通用边界。
+- **批判性思考**：通用批判。
+- **一句话提炼**：通用提炼。
+
+## 全书核心框架
+
+1. 框架一
+2. 框架二
+3. 框架三
+
+## 金句
+
+> 1. “示例句子。”（第一章）
+""",
+                encoding="utf-8",
+            )
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertTrue(report["passed"])
+            self.assertEqual(report["checked_chapters"], 2)
+            self.assertEqual(report["filtered_out_count"], 2)
+            self.assertEqual(report["missing_chapters"], [])
 
 
 if __name__ == "__main__":

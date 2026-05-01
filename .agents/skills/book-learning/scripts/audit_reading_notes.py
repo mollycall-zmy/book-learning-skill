@@ -6,7 +6,11 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from extract_toc import main_chapters_from_toc  # noqa: E402
 
 
 REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created")
@@ -47,14 +51,29 @@ def section_for_title(content: str, title: str, all_titles: list[str]) -> str:
     return content[match.start() : end]
 
 
-def audit_reading_notes(toc_path: Path, reading_notes_path: Path) -> dict:
+def audit_reading_notes(
+    toc_path: Path,
+    reading_notes_path: Path,
+    *,
+    min_lines: int = 15,
+    max_level: int = 3,
+    include_sidebars: bool = False,
+) -> dict:
     toc = json.loads(toc_path.read_text(encoding="utf-8"))
-    chapters = toc.get("chapters", [])
+    chapters, filtered_out = main_chapters_from_toc(
+        toc,
+        min_lines=min_lines,
+        max_level=max_level,
+        include_sidebars=include_sidebars,
+        include_toc_heading=False,
+    )
     titles = [entry["title"] for entry in chapters]
 
     if not reading_notes_path.exists():
         return {
             "reading_notes_exists": False,
+            "checked_chapters": len(chapters),
+            "filtered_out_count": len(filtered_out),
             "frontmatter_passed": False,
             "missing_frontmatter_fields": list(REQUIRED_FRONTMATTER_FIELDS),
             "chapter_coverage_passed": False,
@@ -99,6 +118,8 @@ def audit_reading_notes(toc_path: Path, reading_notes_path: Path) -> dict:
     has_quotes = "金句" in content
     report = {
         "reading_notes_exists": True,
+        "checked_chapters": len(chapters),
+        "filtered_out_count": len(filtered_out),
         "frontmatter_passed": not missing_fields,
         "missing_frontmatter_fields": missing_fields,
         "chapter_coverage_passed": not missing_chapters,
@@ -131,6 +152,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Audit consolidated reading notes against TOC JSON.")
     parser.add_argument("--toc", type=Path, required=True)
     parser.add_argument("--reading-notes", type=Path, required=True)
+    parser.add_argument("--min-lines", type=int, default=15)
+    parser.add_argument("--max-level", type=int, default=3)
+    parser.add_argument("--include-sidebars", action="store_true")
     parser.add_argument("--out", type=Path)
     return parser.parse_args()
 
@@ -139,7 +163,13 @@ def main() -> int:
     args = parse_args()
     if not args.toc.exists():
         raise SystemExit(f"TOC file does not exist: {args.toc}")
-    report = audit_reading_notes(args.toc, args.reading_notes)
+    report = audit_reading_notes(
+        args.toc,
+        args.reading_notes,
+        min_lines=args.min_lines,
+        max_level=args.max_level,
+        include_sidebars=args.include_sidebars,
+    )
     output = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
