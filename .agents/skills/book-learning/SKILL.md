@@ -1,9 +1,11 @@
 ---
 name: book-learning
-description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by preserving the table of contents, splitting chapters, producing chapter-by-chapter SQ3R notes, auditing omissions, and generating traceable atomic knowledge cards. Use when the user asks to study, digest, summarize, or build a knowledge base from a whole book or long manuscript.
+description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by preserving the table of contents, splitting chapters, producing chapter-by-chapter SQ3R notes, auditing omissions, and generating traceable atomic knowledge cards. Use when the user asks to study, digest, summarize, or build a knowledge base from a whole book or long manuscript, including Chinese requests such as 学习这本书, 读一下这本书, 逐章做笔记, 提取知识卡片, 检查章节遗漏, or 建立知识库.
 ---
 
 # Book Learning
+
+Chinese trigger examples: `学习这本书`, `读一下这本书`, `帮我逐章做笔记`, `先提取目录树`, `生成原子知识卡片`, `检查章节有没有遗漏`.
 
 Follow this order strictly:
 
