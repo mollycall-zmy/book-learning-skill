@@ -1,119 +1,247 @@
-# book-learning-skill
+<p align="center">
+  <img src="docs/images/cover.png" alt="book-learning-skill cover" width="100%">
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<h1 align="center">book-learning-skill</h1>
 
-An Agent Skill for learning a whole book through a structured workflow: convert the source, preserve the table of contents, read chapter by chapter, audit for omissions, and produce traceable atomic knowledge cards.
+<p align="center">
+  <strong>An open Agent Skill for systematic whole-book learning</strong><br>
+  <sub>
+    By <a href="https://mollycall.cn">MW · 美未职造</a>
+    &mdash;
+    Structure → Chapters → Audit → Knowledge Cards
+  </sub>
+</p>
 
-This repository does not include real books, PDFs, EPUBs, copyrighted excerpts, or private user files.
+<p align="center">
+  <a href="./LICENSE">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg">
+  </a>
+  <a href="./README.md">
+    <img alt="README Chinese" src="https://img.shields.io/badge/README-Chinese-red.svg">
+  </a>
+  <img alt="Agent Skill" src="https://img.shields.io/badge/Agent%20Skill-book--learning-purple.svg">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-blue.svg">
+</p>
 
-## Structure
+**book-learning-skill** is an open Agent Skill that turns a whole book from PDF / EPUB / DOCX / HTML into auditable, traceable, reusable structured knowledge assets.
+
+It is not a "read and summarize" shortcut. It guides an Agent through table-of-contents extraction, chapter notes, omission audits, layered summaries, and atomic knowledge cards.
+
+> Produced by [MW · 美未职造](https://mollycall.cn)  
+> License: MIT  
+> Status: v0.1.x MVP
+
+## Contents
+
+- [What Problem It Solves](#what-problem-it-solves)
+- [Core Principles](#core-principles)
+- [How It Works](#how-it-works)
+- [Skill](#skill)
+- [Features](#features)
+- [Supported Formats](#supported-formats)
+- [Outputs](#outputs)
+- [Quick Start](#quick-start)
+- [Local Tests](#local-tests)
+- [Using It With An Agent](#using-it-with-an-agent)
+- [Roadmap](#roadmap)
+- [License](#license)
+- [Brand Notice](#brand-notice)
+- [Contributing](#contributing)
+
+## What Problem It Solves
+
+Whole-book learning is hard for Agents because long books cannot usually fit into one prompt. Naive summaries often skip chapters, flatten details, and lose context. Notes also become less useful when claims cannot be traced back to chapters or line ranges.
+
+This Skill turns whole-book learning into an executable workflow: preserve structure, split chapters, write chapter notes, audit omissions, and only then create summaries and atomic knowledge cards.
+
+## Core Principles
+
+> Structure preservation > Chapter understanding > Detail retention > Source traceability > Layered summary > Cross-chapter synthesis > Atomic knowledge extraction
+
+- **Structure preservation**: identify the TOC and chapter boundaries before summarizing.
+- **Chapter understanding**: digest each chapter independently.
+- **Detail retention**: keep definitions, data, examples, constraints, counterexamples, and surprising claims.
+- **Source traceability**: every claim should trace back to a chapter or line range.
+- **Layered summary**: compress gradually from chapter notes to book summary to cards.
+- **Cross-chapter synthesis**: synthesize themes only after chapter notes are complete.
+- **Atomic extraction**: each card should preserve one reusable idea.
+
+## How It Works
 
 ```text
-.agents/skills/book-learning/
-├── SKILL.md
-├── references/
-├── scripts/
-└── assets/
+You / User
+   │
+   ▼
+Agent (Codex / Hermes / Cursor / OpenClaw)
+   │
+   ▼
+book-learning-skill
+   ├── Detect file format
+   ├── PDF / EPUB / DOCX / HTML → Markdown
+   ├── Extract TOC + chapter boundaries
+   ├── Split by chapter
+   ├── SQ3R chapter reading and notes
+   ├── Chapter omission audit
+   ├── Layered summary L0 → L4
+   └── Generate atomic knowledge cards
+   │
+   ▼
+Knowledge Base / Notes / Atomic Knowledge Cards
 ```
 
-Runtime content should stay outside git:
+The point is not simply faster summarization. The point is structure, auditability, and traceability for long-text work.
 
-- `raw/books/` for original user-provided files
-- `outputs/` for converted markdown, chapter splits, notes, and audit reports
-- `knowledge_base/` for generated card archives and indexes
+## Skill
 
-## Install
+| Skill | Description | Typical Triggers |
+| --- | --- | --- |
+| **book-learning** | Learn a whole book through conversion, TOC extraction, chapter notes, omission audits, layered summaries, and atomic knowledge cards | `study this book` `read this EPUB` `turn this PDF into knowledge cards` `学习这本书` `喂你一本书` |
 
-Python scripts use the standard library for TOC extraction, chapter splitting, auditing, and tests. Optional conversion dependencies are listed in `requirements.txt`:
+## Features
+
+- [x] PDF / EPUB / DOCX / HTML / Markdown workflow
+- [x] Convert documents to Markdown
+- [x] Extract TOC from Markdown headings
+- [x] Output chapter title, heading level, and line ranges
+- [x] Split chapter files from TOC
+- [x] Audit missing chapter files and note files
+- [x] Provide templates for chapter notes, book summaries, and cards
+- [x] Provide a standard Agent Skill directory
+- [ ] Generate chapter note skeletons automatically
+- [ ] OCR workflow orchestration
+- [ ] Resumable progress for large books
+- [ ] Generate knowledge card indexes
+
+## Supported Formats
+
+| Input | Status | Method |
+| --- | --- | --- |
+| `.md` | Native | Extract TOC and split directly |
+| `.pdf` | Supported | Convert with PyMuPDF4LLM |
+| `.epub` | Supported | Convert with Pandoc |
+| `.docx` | Supported | Convert with Pandoc |
+| `.html` / `.htm` | Supported | Convert with Pandoc |
+| Scanned PDF | Indirect | OCR first, then PDF → Markdown |
+| `.caj` / `.nh` / `.kdh` | Not directly supported | Convert to PDF first |
+
+## Outputs
+
+| Output | Description |
+| --- | --- |
+| `toc.json` | TOC, chapter levels, and line ranges |
+| `chapters/` | Chapter-level Markdown files |
+| `notes/` | SQ3R chapter notes |
+| `audit.json` | Chapter omission audit report |
+| `book_summary.md` | Layered book summary |
+| `knowledge_cards/` | Atomic knowledge cards |
+| `index.md` | Knowledge base index, planned for v0.2.0 |
+
+## Quick Start
+
+### Use As An Agent Skill
+
+Open this repository as a project, or place `.agents/skills/book-learning/` in your Agent workspace.
+
+Then ask:
+
+> Read this book chapter by chapter and generate traceable knowledge cards.
+
+The Agent should follow `.agents/skills/book-learning/SKILL.md`.
+
+### Run Scripts Manually
 
 ```bash
+git clone https://github.com/mollycall-zmy/book-learning-skill.git
+cd book-learning-skill
+
 python3 -m pip install -r requirements.txt
+python3 .agents/skills/book-learning/scripts/check_tools.py
 ```
 
-Some converters are external tools:
-
-- PDF: `pymupdf4llm` from pip
-- EPUB, DOCX, HTML: `pandoc`
-- EPUB/DOCX/HTML fallback through pip: `pypandoc_binary`
-- Scanned PDF OCR: `ocrmypdf` from pip, usually with system OCR dependencies
-
-`check_tools.py` only detects tools in v0.1.0. It does not install anything automatically.
-
-## Use
-
-Ask an Agent to use `.agents/skills/book-learning/` when learning a book. The expected flow is:
-
-1. Put the source file in `raw/books/`.
-2. Convert it to Markdown in `outputs/`.
-3. Extract a TOC with line ranges.
-4. Split chapters by TOC.
-5. Write chapter notes from the templates.
-6. Audit TOC, chapters, and notes before generating a full-book summary.
-7. Generate atomic knowledge cards with traceable chapter sources.
-
-Example commands:
+Run the synthetic sample:
 
 ```bash
-python3 .agents/skills/book-learning/scripts/check_tools.py
 python3 .agents/skills/book-learning/scripts/extract_toc.py examples/sample_book.md --out outputs/toc.json
 python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_book.md --toc outputs/toc.json --out outputs/chapters
 python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
 ```
 
-## Testing With Your Own PDF / EPUB
-
-This repository does not include real PDF, EPUB, DOCX, or other book samples. Prepare a file that you legally own and are allowed to process locally, then place it under `raw/books/`. That directory is ignored by git and should not be committed.
-
-Conversion examples:
+Use your own PDF / EPUB / DOCX / HTML:
 
 ```bash
-python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-book.pdf --out outputs/my-book.md
-python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-book.epub --out outputs/my-book.md
-python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-book.docx --out outputs/my-book.md
-python3 .agents/skills/book-learning/scripts/convert_to_md.py raw/books/my-page.html --out outputs/my-page.md
+python3 .agents/skills/book-learning/scripts/convert_to_md.py path/to/your_book.pdf --out outputs/your_book.md
+python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/your_book.md --out outputs/toc.json
+python3 .agents/skills/book-learning/scripts/split_chapters.py outputs/your_book.md --toc outputs/toc.json --out outputs/chapters
 ```
 
-Then continue with structure extraction:
-
-```bash
-python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/my-book.md --out outputs/toc.json
-python3 .agents/skills/book-learning/scripts/split_chapters.py outputs/my-book.md --toc outputs/toc.json --out outputs/chapters
-python3 .agents/skills/book-learning/scripts/audit_chapters.py --toc outputs/toc.json --chapters outputs/chapters --notes outputs/notes --out outputs/audit.json
-```
-
-If a converter is missing, run `check_tools.py` to inspect your environment. v0.1.1 does not install dependencies automatically.
+Only process files that you legally own or have permission to process. Do not commit copyrighted books, private files, or generated outputs.
 
 ## Local Tests
-
-Run the test suite:
 
 ```bash
 python3 -m unittest discover -s tests
 ```
 
-The test fixture `examples/sample_book.md` is artificial content written for this repository. It is not copied from any real book.
+## Using It With An Agent
 
-## Copyright Boundary
+The repository follows a common Agent Skill layout:
 
-Do not commit:
+```text
+.agents/
+└── skills/
+    └── book-learning/
+        ├── SKILL.md
+        ├── references/
+        ├── scripts/
+        └── assets/
+```
 
-- Real books, PDFs, EPUBs, MOBI/AZW files, or OCR outputs
-- Long copyrighted excerpts
-- User private files
-- Generated knowledge bases from copyrighted books
+The Agent should read `SKILL.md` first, then load these references as needed:
 
-Commit only Skill instructions, scripts, templates, synthetic examples, and tests.
+- `references/workflow.md`
+- `references/output_schema.md`
+- `references/card_rules.md`
 
 ## Roadmap
 
-Planned for v0.2.0:
+### v0.1.x
 
-- Add a `--install` option to `check_tools.py` for optional dependency installation guidance
-- Generate chapter note skeletons automatically
-- Orchestrate OCR workflows for scanned PDFs
-- Add resumable progress tracking with `progress.json`
-- Improve TOC detection for non-standard Markdown headings
+- [x] Standard Agent Skill directory
+- [x] PDF / EPUB / DOCX / HTML / Markdown conversion entry point
+- [x] TOC extraction
+- [x] Chapter splitting
+- [x] Chapter omission audit
+- [x] Chinese README
+- [x] Contributing guide
+
+### v0.2.0
+
+- [ ] `check_tools.py --install`
+- [ ] Generate chapter note skeletons automatically
+- [ ] `progress.json` resumable progress
+- [ ] OCR orchestration
+- [ ] Knowledge card index generation
+- [ ] Obsidian / Logseq output adapters
+
+## License
+
+This repository is released under the MIT License. See [LICENSE](./LICENSE) for details.
+
+## Brand Notice
+
+The source code and general documentation are open under the MIT License.
+
+Brand assets, cover images, logos, and the “MW · 美未职造” brand identity are not included in the default open-source license unless explicitly stated otherwise.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for issue, PR, testing, copyright, and style guidelines.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+---
+
+<p align="center">
+  <strong>MW · 美未职造</strong><br>
+  <a href="https://mollycall.cn">mollycall.cn</a> ·
+  <a href="mailto:business@mollycall.cn">business@mollycall.cn</a>
+</p>
