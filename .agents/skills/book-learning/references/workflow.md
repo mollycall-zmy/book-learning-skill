@@ -123,13 +123,11 @@ created: YYYY-MM-DD
 # 📚 《示例书》— 示例作者
 
 <div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="background: #FFFFFF; border-radius: 12px; padding: 22px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
-      全书一句话
-    </div>
-    <div style="font-size: 18px; line-height: 1.7; color: #222; font-weight: 600;">
-      这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
-    </div>
+  <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
+    全书一句话
+  </div>
+  <div style="font-size: 20px; line-height: 1.7; color: #222; font-weight: 600;">
+    这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
   </div>
 </div>
 
@@ -168,26 +166,31 @@ created: YYYY-MM-DD
     <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
       <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
       <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
+      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
       <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用和含义。</div>
     </div>
     <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
       <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 02</div>
       <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架二</div>
+      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
       <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架二的作用和含义。</div>
     </div>
     <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
       <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 03</div>
       <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架三</div>
+      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
       <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架三的作用和含义。</div>
     </div>
     <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
       <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 04</div>
       <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架四</div>
+      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
       <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架四的作用和含义。</div>
     </div>
   </div>
   <div style="background: #FFFFFF; border-radius: 12px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
     <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">总体关系</div>
+    <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
     <div style="font-size: 12px; color: #555; line-height: 1.6;">这里说明这些框架之间的关系，以及它们如何共同构成本书的核心观点。</div>
   </div>
 </div>
@@ -222,6 +225,13 @@ Use HTML cards mainly for:
 - 全书核心框架
 - Key models or comparison frameworks
 
+Card differentiation:
+
+- One-liner: flat gradient panel, no inner white card, no shadow.
+- Process flow: lightweight nodes, thin border, no shadow on normal nodes.
+- Core framework: stable knowledge cards with light shadow and optional thin gold divider below titles.
+- Comparison: two-column contrast layout with subtle background difference and a center divider.
+
 Rules:
 
 - The book one-liner should use the warm HTML container instead of a callout.
@@ -230,7 +240,8 @@ Rules:
 - HTML components must use inline style.
 - Do not force every chapter section into HTML.
 - Keep ordinary chapter content in Markdown when that is easier to maintain.
-- Do not use dark card backgrounds, heavy shadows, top border decoration, full border declarations, or large gold areas.
+- Do not use dark card backgrounds, heavy shadows, top border decoration, full border declarations outside lightweight process nodes, or large gold areas.
+- Do not create visual difference by adding noise, new colors, heavy shadows, or decorative ornaments.
 
 ### Backlink Rules / 双链回链规则
 
