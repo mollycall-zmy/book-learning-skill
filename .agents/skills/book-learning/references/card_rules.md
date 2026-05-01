@@ -1,4 +1,15 @@
-# Card Rules
+# Card Rules (Deprecated)
+
+Knowledge cards are no longer part of the default book-learning workflow.
+
+Default reading output is:
+
+```text
+raw/books/{书名}.md
+outputs/reading_notes.md
+```
+
+Use this file only if the user explicitly asks to generate cards after the reading note is complete. Card extraction should be an optional archival/review task, not the default reading-stage output.
 
 ## Core Rule
 

@@ -1,54 +1,20 @@
-# {chapter_title}
+# Reading Notes Section Template
 
-## Source
+Use this compact section format inside `outputs/reading_notes.md`. Do not create separate `.notes.md` files by default.
 
-- chapter_id:
-- chapter_title:
-- source_file:
-- line_range:
+## {chapter_title}
 
-## Core Questions
+**核心主张**：一句话概括本章。
 
--
+**关键要点**：
 
-## Main Claims
+- 要点 1（[[raw/books/{book_title}#{chapter_title}]])
+- 要点 2
+- 要点 3
 
--
+**AI 分析**：
 
-## Argument Chain
-
-1.
-
-## Concepts And Definitions
-
--
-
-## Evidence, Cases, And Data
-
--
-
-## Easy-To-Miss Details
-
--
-
-## Transferable Insights
-
--
-
-## AI Analysis / AI 分析
-
-### Cross-reference / 跨界关联
-
-
-### Applicability Boundary / 适用边界
-
-
-### Critique / 批判性思考
-
-
-### One-sentence Distillation / 一句话提炼
-
-
-## Open Questions
-
--
+- **跨界关联**：这个观点和其他书籍、领域、框架有什么关联？
+- **适用边界**：什么时候有效，什么时候失效？
+- **批判性思考**：作者没说的、可能有问题的、可能存在的反例。
+- **一句话提炼**：本章最值得带走的一句话。

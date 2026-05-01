@@ -20,137 +20,108 @@
 
 Line numbers are 1-based and inclusive.
 
-## Chapter File
+## Raw Source
 
-Filename:
-
-```text
-001-chapter-title.md
-```
-
-Body:
-
-```markdown
-# Chapter Title
-
-...
-```
-
-## Chapter Note
-
-Filename:
+Default path:
 
 ```text
-001-chapter-title.notes.md
+raw/books/{书名}.md
 ```
 
-Required sections:
+The raw source is archived for traceability. Treat it as read-only.
 
-- Source
-- Core Questions
-- Main Claims
-- Argument Chain
-- Concepts And Definitions
-- Evidence, Cases, And Data
-- Easy-To-Miss Details
-- Transferable Insights
-- AI Analysis / AI 分析
-- Open Questions
+## Reading Notes
 
-## Consolidated Reading Notes
-
-Path:
+Default path:
 
 ```text
 outputs/reading_notes.md
 ```
 
-This is the primary reading output. Per-chapter notes are audit and traceability files.
+This is the primary reading output.
 
-Required sections:
+If the user provides a knowledge base or Obsidian path, the same note may be archived as:
 
-- 大目录
-- 分章节笔记
-- Each chapter's core claim
-- Each chapter's key points
-- Each chapter's AI Analysis / AI 分析
-- 全书核心框架
-- 金句集
+```text
+L1-事实与语义/02-📚 知识/{书名}-阅读笔记.md
+```
 
-For long books:
+Do not hard-code that path in the open-source workflow.
 
-- Chapters may be grouped by part, section, or theme.
-- Chapters must not be omitted.
-- Every chapter must have at least one core claim.
-
-Minimal structure:
+Required structure:
 
 ```markdown
-# 《书名》阅读笔记
+---
+aliases: [书名别名]
+tags: [书籍, 分类]
+author: 作者名
+source: "[[raw/books/书名]]"
+created: YYYY-MM-DD
+---
 
-## 大目录
+# 📚 《书名》— 作者
 
-| 章节 | 核心主张 | 页数/行数 |
-| --- | --- | --- |
+> [!info] 全书一句话
+> 用一句话概括本书核心主张。
 
-## 分章节笔记
+## 目录
 
-### 第一章 xxx
+- [[#第一章 标题]]
+- [[#第二章 标题]]
 
-#### 核心主张
+## 第一章 标题
 
-#### 关键要点
+**核心主张**：一句话概括本章。
 
-#### AI 分析
+**关键要点**：
+
+- 要点 1（[[raw/books/书名#第一章 标题]]）
+- 要点 2
+- 要点 3
+
+**AI 分析**：
+
+- **跨界关联**：xxx
+- **适用边界**：xxx
+- **批判性思考**：xxx
+- **一句话提炼**：xxx
 
 ## 全书核心框架
 
-## 金句集
+1. 框架 1
+2. 框架 2
+3. 框架 3
+
+## 金句
+
+> 1. “原文金句。”（第 X 章）
 ```
 
-## Audit JSON
+Rules:
+
+- Every in-scope chapter must appear in this file.
+- Every chapter must include at least one core claim.
+- Every chapter must include AI Analysis / AI 分析.
+- Every chapter must include at least one backlink to the raw source.
+- Long books may be grouped by part, section, or theme, but chapters must not be omitted.
+
+## Reading Notes Audit JSON
 
 ```json
 {
-  "status": "pass",
-  "toc_count": 3,
-  "chapter_file_count": 3,
-  "note_file_count": 3,
-  "missing_chapters": [],
-  "extra_chapter_files": [],
-  "missing_notes": [],
-  "incomplete_notes": [],
-  "notes_missing_ai_analysis": [],
   "reading_notes_exists": true,
-  "reading_notes_has_core_framework": true,
-  "reading_notes_has_chapter_notes": true
+  "frontmatter_passed": true,
+  "missing_frontmatter_fields": [],
+  "chapter_coverage_passed": true,
+  "missing_chapters": [],
+  "core_claims_passed": true,
+  "chapters_missing_core_claim": [],
+  "ai_analysis_passed": true,
+  "chapters_missing_ai_analysis": [],
+  "backlinks_passed": true,
+  "chapters_missing_backlinks": [],
+  "has_core_framework": true,
+  "has_quotes": true,
+  "passed": true
 }
-```
-
-`status` is `pass` only when every list is empty.
-
-## Knowledge Card
-
-Filename:
-
-```text
-card-YYYYMMDD-short-slug.md
-```
-
-Required fields:
-
-- Title
-- Type
-- Atomic Idea
-- Source
-- Explanation
-- Reuse Context
-- Related Cards
-
-Source format:
-
-```text
-chapter_id: 003
-chapter_title: Example Chapter
-lines: 42-68
 ```
