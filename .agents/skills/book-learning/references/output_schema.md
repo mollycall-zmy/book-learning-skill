@@ -226,3 +226,56 @@ Rules:
   "passed": true
 }
 ```
+
+## Cognitive Toolbox Artifacts
+
+These are second-stage outputs created only after `outputs/reading_notes.md` is complete and audited.
+
+### Method Cards
+
+Recommended path:
+
+```text
+outputs/cognitive_toolbox/method_cards/
+```
+
+Each method card should follow `assets/method_card_template.md` and include:
+
+- applicable scenes
+- non-applicable scenes
+- core checks
+- usage steps
+- output template
+- challenge questions
+- next actions
+- source note path
+
+### Scene Trigger Index
+
+Recommended path:
+
+```text
+outputs/cognitive_toolbox/scene_trigger_index.md
+```
+
+The index should map task types to semantic triggers, typical user expressions, primary method cards, and backup method cards.
+
+### Scent Vector
+
+Recommended path:
+
+```text
+outputs/cognitive_toolbox/scent_vector.md
+```
+
+Scent vectors are optional semantic routing hints. They should not be required for open-source usage.
+
+### Invocation Report
+
+Recommended path:
+
+```text
+outputs/cognitive_toolbox/invocation_report.md
+```
+
+Use this only when testing whether method cards improve real task outputs.

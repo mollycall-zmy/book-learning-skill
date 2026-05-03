@@ -409,18 +409,57 @@ Check:
 
 Do not proceed to completion if `audit_reading_notes.py` fails.
 
-## Optional Knowledge Cards
+## Cognitive Toolbox Stage
 
-Knowledge cards are not default reading-stage artifacts.
+After `outputs/reading_notes.md` is complete and audited, the Agent may create a cognitive toolbox from the book.
 
-Default output is only:
+This stage includes:
+
+- Extracting 3-5 method cards
+- Updating a scene trigger index
+- Assigning optional scent vectors
+- Creating a knowledge invocation guide
+- Testing whether the method cards improve real task outputs
+
+Core principle:
+
+- Reading notes explain what the book says.
+- Method cards make the book's methods callable in real tasks.
+
+Rules:
+
+- Do not create method cards before `outputs/reading_notes.md` is complete.
+- Do not create too many method cards.
+- Method cards must be actionable.
+- Method cards must have applicable and non-applicable scenes.
+- Method cards must include output templates.
+- Method cards must not be summaries.
+- Knowledge invocation must serve the user's current task.
+- Scent vectors are optional routing hints, not hard dependencies.
+
+Second-stage artifacts may include:
 
 ```text
-raw/books/{书名}.md
+assets/method_card_template.md
+assets/scene_index_template.md
+assets/scent_vector_template.md
+assets/invocation_report_template.md
+```
+
+Read these references only when needed:
+
+- `references/method_card_design.md`
+- `references/scene_trigger_index.md`
+- `references/scent_vector_routing.md`
+- `references/knowledge_invocation.md`
+
+Default output remains:
+
+```text
 outputs/reading_notes.md
 ```
 
-If the user explicitly asks to generate knowledge cards, treat that as a separate optional task after reading. The user should decide which ideas are worth splitting into cards during archival or review.
+Do not restore default knowledge-card generation or per-chapter note files.
 
 ## Step 9: Completion Report
 
