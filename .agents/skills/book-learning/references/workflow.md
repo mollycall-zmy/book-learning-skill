@@ -2,40 +2,109 @@
 
 ## Purpose
 
-Turn a whole book into two durable artifacts:
+Turn a whole book into one durable knowledge artifact with clear lifecycle boundaries:
 
-1. Raw source archive: `raw/books/{book-title}.md`
-2. Complete reading note: `outputs/reading_notes.md`
+- `raw` = read-only source assets
+- `.cache` = system intermediate artifacts
+- `L1 / knowledge` = the only knowledge output when a knowledge base path exists
+- `index` = callable entry metadata
 
-If the user provides a knowledge base or Obsidian path, the final note may be archived as:
+Do not keep the same `reading_notes.md` in both `outputs/` and a knowledge base. Each run has exactly one canonical reading notes path.
+
+## Directory Responsibilities
+
+### Raw Layer
+
+Raw stores only source assets:
 
 ```text
-L1-事实与语义/02-📚 知识/{书名}-阅读笔记.md
+raw/books/{book_slug}/
+├── {book_slug}.epub
+└── {book_slug}.md
 ```
 
-Do not hard-code a user's knowledge base path in the open-source workflow. `outputs/reading_notes.md` is the default output, and users may move or configure the final destination.
+Rules:
 
-## Step 0: Receive And Convert
+- Raw files are read-only after creation.
+- `{book_slug}.md` must be retained as the Markdown source of truth for Obsidian backlinks and audits.
+- Do not put `reading_notes.md`, `chapters/`, `audit.json`, or `run_manifest.json` under `raw/`.
 
-Place the original file under `raw/books/` and treat it as read-only.
+### Cache Layer
+
+Intermediate artifacts go under:
+
+```text
+.cache/book-learning/{book_slug}/
+├── toc.json
+├── chapters/
+├── audit.json
+└── run_manifest.json
+```
+
+Rules:
+
+- `toc.json` is the processing index.
+- `chapters/` is a temporary split for chapter-sized reading.
+- `audit.json` is the audit report for the canonical notes.
+- `run_manifest.json` bridges the run to text indexes, scent routing, and optional vector systems.
+- Cache can be kept for debugging or cleaned later. It is not final Obsidian knowledge content.
+
+### Canonical Reading Notes
+
+If the user provides a knowledge base path, write directly to:
+
+```text
+L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+```
+
+If no knowledge base path is provided, write to:
+
+```text
+outputs/reading_notes.md
+```
+
+Rules:
+
+- The canonical reading notes path is the only final reading output for the run.
+- Do not keep a duplicate note under `raw/` or another `outputs/` location when the knowledge base path is used.
+- If a temporary note must be moved to the knowledge base, delete the temporary duplicate after moving.
+- The completion report must state the canonical reading notes path.
+
+## Workflow Steps
+
+### Step 1: Store Raw Source
+
+Place the original user file under:
+
+```text
+raw/books/{book_slug}/{book_slug}.{ext}
+```
+
+Treat it as read-only. Do not commit real books, OCR output, private user files, or generated knowledge bases.
+
+### Step 2: Convert To Source Markdown
+
+Convert the source to:
+
+```text
+raw/books/{book_slug}/{book_slug}.md
+```
 
 Supported inputs:
 
-- `.md`: use directly
+- `.md`: copy or normalize into the raw book folder
 - `.pdf`: convert with `pymupdf4llm`
 - `.epub`, `.docx`, `.html`, `.htm`: convert with `pandoc`, falling back to `pypandoc` if available
 
 For scanned PDFs, run OCR before conversion. OCR is detected but not automated in the core conversion path.
 
-## Step 1: Extract TOC
+### Step 3: Extract TOC To Cache
 
-Run `extract_toc.py` on the Markdown file. The output must include:
+Run `extract_toc.py` on the raw Markdown source:
 
-- Stable chapter id
-- Heading title
-- Heading level
-- Start line
-- End line
+```bash
+python3 .agents/skills/book-learning/scripts/extract_toc.py raw/books/{book_slug}/{book_slug}.md --out .cache/book-learning/{book_slug}/toc.json --min-lines 15 --max-level 3
+```
 
 By default, TOC extraction keeps main chapters and filters out likely non-chapter headings:
 
@@ -45,423 +114,205 @@ By default, TOC extraction keeps main chapters and filters out likely non-chapte
 - Sections shorter than `--min-lines 15`
 - Empty or decorative headings
 
-Adjust with:
+Use `--include-sidebars` only when the user explicitly wants sidebar / box entries preserved as TOC items. If the Markdown has no headings, stop and ask for a chapter structure or create a proposed structure for user review.
+
+### Step 4: Split Chapters To Cache
+
+Run `split_chapters.py` only for processing:
 
 ```bash
-python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/book.md --out outputs/toc.json --min-lines 15 --max-level 3
+python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/{book_slug}/{book_slug}.md --toc .cache/book-learning/{book_slug}/toc.json --out .cache/book-learning/{book_slug}/chapters
 ```
 
-Use `--include-sidebars` only when the user explicitly wants sidebar / box entries preserved as TOC items.
+`chapters/` is cache. It is not a final product and must not become the long-term backlink target.
 
-If the Markdown has no headings, stop and ask for a chapter structure or create a proposed structure for user review.
+### Step 5: Generate Reading Notes To Canonical Path
 
-## Step 2: Review Target Location
+Read every in-scope chapter and write concise, high-density notes into the canonical reading notes path.
 
-Default output is:
-
-```text
-outputs/reading_notes.md
-```
-
-If the user provides a knowledge base path, archive the final reading note there after local output is complete. Example:
-
-```text
-L1-事实与语义/02-📚 知识/{书名}-阅读笔记.md
-```
-
-## Step 3: Split For Processing
-
-Run `split_chapters.py` using the TOC JSON if chapter-sized processing is needed. Chapter files are intermediate processing artifacts, not final reading outputs.
-
-Use deterministic filenames based on chapter id and a slugified title.
-
-## Step 4: Chapter Distillation
-
-Read every in-scope chapter, but write concise, high-density notes into one consolidated file:
-
-```text
-outputs/reading_notes.md
-```
-
-Do not create default per-chapter `.notes.md` files. All chapters must appear in one reading note.
-
-Each chapter note should help a reader who has not read the book quickly understand what the book says.
-
-Focus on:
+Each chapter note should help a reader who has not read the book quickly understand what the book says. Focus on:
 
 1. Core Definition / Claim
-   - What is the key idea of this chapter?
-   - What does the author define, assert, or clarify?
-   - Use 1-2 sentences.
 2. Key Framework
-   - What model, method, classification, process, or structure does the chapter provide?
-   - Use bullets or a small table.
-   - This is the highest-value part of the reading note.
-   - If the chapter has no real framework, omit this part instead of inventing one.
 3. Core Conclusion
-   - What is the author's most important conclusion in this chapter?
-   - Use 1-2 sentences.
 4. Supporting Evidence
-   - What is the strongest evidence behind the conclusion?
-   - Keep only the strongest 1-2 items.
-   - Evidence may include research, data, cases, named examples, or a clear argument chain.
-   - Do not list every story.
 5. Source Backlink
-   - Each chapter note should include at least one backlink to the raw source.
 
-Use this structure:
+Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, or `knowledge_cards/`. Long books may be grouped by part, volume, or theme, but no in-scope chapter may be omitted.
+
+## Reading Notes Structure
+
+Use this structure inside the canonical reading notes path:
 
 ```markdown
 ---
 aliases: [示例书]
 tags: [书籍, 分类]
 author: 示例作者
-source: "[[raw/books/示例书]]"
+source: "[[raw/books/示例书/示例书.md]]"
 created: YYYY-MM-DD
 ---
 
 # 📚 《示例书》— 示例作者
 
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
-    全书一句话
-  </div>
-  <div style="font-size: 20px; line-height: 1.7; color: #222; font-weight: 600;">
-    这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
-  </div>
-</div>
-
 ## 目录
 
 - [[#第一章 示例章节]]
-- [[#第二章 示例章节]]
 
 ## 第一章 示例章节
 
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书#第一章 示例章节|🔗]]
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
 **关键框架**：
 
-- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
-- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
+- 框架 / 方法 / 分类 / 模型：说明其结构和含义。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书#第一章 示例章节|🔗]]
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
 **支撑证据**：
 
-- 证据 1：最有力的数据、研究、案例或原文论证。
-- 证据 2：如果有第二个强证据，再补充；不要罗列弱故事。
-
-## 第二章 示例章节
-
-同上。
+- 证据：保留最有力的数据、研究、案例或论证链。
 
 ## 全书核心框架
 
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
-    全书核心框架
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 02</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架二</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架二的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 03</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架三</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架三的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 04</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架四</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架四的作用和含义。</div>
-    </div>
-  </div>
-  <div style="background: #FFFFFF; border-radius: 12px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">总体关系</div>
-    <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-    <div style="font-size: 12px; color: #555; line-height: 1.6;">这里说明这些框架之间的关系，以及它们如何共同构成本书的核心观点。</div>
-  </div>
-</div>
+概括全书最重要的模型、框架或方法。
 
 ## 金句
 
-> 1. “原文金句。”（第 X 章）
+> 1. “示例金句。”（第一章）
 ```
 
 Rules:
 
-- Every in-scope chapter must appear in `outputs/reading_notes.md`.
+- Every in-scope chapter must appear in the canonical reading notes.
 - Remove storytelling noise and conversational filler.
 - Do not copy long passages from the book.
-- Do not turn anecdotes into key points unless the underlying concept is extracted.
 - Do not fill template fields mechanically.
 - If a field is not applicable, omit it.
-- Notes should be readable, concise, and dense.
 - Default target length: 15-25 lines per chapter.
-- Long books may be grouped by part, volume, or theme, but no chapter may be omitted.
-- If a chapter is intentionally not expanded, mark the reason explicitly.
-- If the author's argument has an obvious dispute, boundary, or counterexample, mention it briefly after the conclusion or evidence. Do not create a fixed analysis section for every chapter.
+- If the author's argument has an obvious dispute, boundary, or counterexample, mention it briefly after the conclusion or evidence.
 
-### HTML Card Components
+## Backlink Rules / 双链回链规则
 
-Reading notes may use inline HTML cards to improve readability in Markdown and Obsidian.
+Every chapter section must include backlinks to the raw source Markdown.
 
-Use HTML cards mainly for:
-
-- 全书一句话
-- Process flows
-- 全书核心框架
-- Key models or comparison frameworks
-
-Card differentiation:
-
-- One-liner: flat gradient panel, no inner white card, no shadow.
-- Process flow: lightweight nodes, thin border, no shadow on normal nodes.
-- Core framework: stable knowledge cards with light shadow and optional thin gold divider below titles.
-- Comparison: two-column contrast layout with subtle background difference and a center divider.
-
-Rules:
-
-- The book one-liner should use the warm HTML container instead of a callout.
-- The core framework section should use a grid card when it contains 3-8 major frameworks.
-- Step-based frameworks may use a Flexbox process component.
-- HTML components must use inline style.
-- Do not force every chapter section into HTML.
-- Keep ordinary chapter content in Markdown when that is easier to maintain.
-- Do not use dark card backgrounds, heavy shadows, top border decoration, full border declarations outside lightweight process nodes, or large gold areas.
-- Do not create visual difference by adding noise, new colors, heavy shadows, or decorative ornaments.
-
-### Backlink Rules / 双链回链规则
-
-Every chapter section in `outputs/reading_notes.md` must include backlinks to the raw source text.
-
-Use Obsidian pipe syntax:
+Recommended format:
 
 ```text
-[[raw/books/{书名}#{章节标题}|🔗]]
+[[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
+```
+
+Obsidian extensionless format is also accepted:
+
+```text
+[[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]
 ```
 
 Rules:
 
-- Each chapter section must contain at least one backlink to the raw source.
-- Recommended density: 3-5 backlinks per chapter section.
-- `核心定义/主张` should include a backlink at the end.
-- `核心结论` should include a backlink at the end.
+- Backlink targets must point to `raw/books/{book_slug}/{book_slug}.md` or its extensionless Obsidian form.
+- Do not point backlinks to `.cache/book-learning/{book_slug}/chapters/`.
+- `chapters/` is an intermediate artifact and cannot be used as the long-term source target.
+- `核心定义/主张` and `核心结论` should include backlinks at the end.
 - If `关键框架` exists, each framework item should include a backlink.
 - `支撑证据` does not require backlinks, but may include them when useful.
-- If a chapter has no distinct framework, one backlink in `核心定义/主张` is sufficient.
-- Backlink target should point to the closest heading in the raw Markdown source.
 - Do not add backlinks to `全书核心框架` or `金句`.
-- Do not over-link every sentence; keep source links useful and readable.
 
-Example:
+## Formatting Audit
 
-```markdown
-**核心定义/主张**：本章指出，关键概念的含义不清会导致论证失效。[[raw/books/示例书#第一章 示例章节|🔗]]
+Reading notes may include tables, Mermaid diagrams, Obsidian callouts, and inline HTML cards. Keep tables and Mermaid blocks unindented, with a blank line before them, and do not place them inside list items or callouts.
 
-**关键框架**：
+Inline HTML cards are allowed for high-level visual sections such as `全书一句话`, process flows, comparison frameworks, and `全书核心框架`. Use inline style only and keep ordinary chapter content in Markdown when that is easier to maintain.
 
-- **框架一**：用于识别概念是否存在歧义。[[raw/books/示例书#子节标题|🔗]]
-- **框架二**：用于判断证据是否足够支撑结论。[[raw/books/示例书#子节标题|🔗]]
+## Audit Canonical Reading Notes
 
-**核心结论**：理解作者的核心概念，是判断一段论证是否成立的前提。[[raw/books/示例书#第一章 示例章节|🔗]]
+Audit the canonical reading notes path:
+
+```bash
+python3 .agents/skills/book-learning/scripts/audit_reading_notes.py \
+  --toc .cache/book-learning/{book_slug}/toc.json \
+  --reading-notes {canonical_notes_path} \
+  --raw-source raw/books/{book_slug}/{book_slug}.md \
+  --out .cache/book-learning/{book_slug}/audit.json
 ```
 
-Purpose:
+The audit checks:
 
-- Make source navigation possible.
-- Preserve source traceability.
-- Prevent reading notes from drifting away from the original text.
-
-### Table & Visualization Formatting / 表格与可视化格式
-
-Reading notes may include tables, Mermaid diagrams, and Obsidian callouts. These must follow strict formatting rules to render correctly.
-
-Table Rules:
-
-- Tables must start at the beginning of the line.
-- Tables must not be indented.
-- Tables must have a blank line before them.
-- Do not place tables inside list items.
-- Do not place tables inside callout blocks.
-- If a callout needs a table, put the callout title first, then put the table outside the callout.
-
-Correct:
-
-```markdown
-**关键框架**：
-
-> [!tip] 核心对比
-
-| 概念 A | 概念 B |
-|-------|-------|
-| 特点 1 | 特点 2 |
-```
-
-Wrong:
-
-```markdown
-- **关键框架**：
-  | 概念 A | 概念 B |
-  |-------|-------|
-```
-
-Mermaid Rules:
-
-- Mermaid code blocks must start at the beginning of the line.
-- There must be a blank line before the opening fence.
-- Do not place Mermaid diagrams inside lists or callouts.
-
-Correct:
-
-````markdown
-**流程示意**：
-
-```mermaid
-flowchart TD
-  A --> B
-```
-````
-
-Callout Rules:
-
-- Callouts may contain text.
-- Callouts should not contain tables or Mermaid diagrams.
-- Put the table or Mermaid block outside the callout.
-
-When to use visualizations:
-
-- Tables: comparing concepts, categories, types, evidence strength.
-- Mermaid flowcharts: processes, decision paths, cause-effect chains.
-- Mermaid mindmaps: concept hierarchies.
-- Callouts: core definitions, warnings, key insights.
-
-## Important Detail Retention
-
-Do not compress these details into generic summary language:
-
-- Definitions and new terms
-- Frameworks and steps
-- Numbers and data
-- Named cases
-- Tables and figures
-- Contrasts and comparisons
-- Causal chains
-- Author conclusions
-- Conditions and exceptions
-- Counterexamples
-- Counterintuitive claims
-- Ideas repeated across chapters
-
-### Sidebar / Box Content Handling
-
-Some books contain sidebar, box, appendix-like fragments, or very short sub-sections such as `方框3.1`.
-
-These items should not usually become standalone chapters in `outputs/reading_notes.md`.
-
-Rules:
-
-1. Do not create independent reading note sections for sidebars / boxes by default.
-2. Integrate important sidebar / box content into the nearest relevant main chapter.
-3. If a sidebar contains a model, framework, matrix, table, or important example, summarize it under the corresponding chapter's `关键要点` or `补充说明`.
-4. Keep source traceability with backlinks, for example: `[[raw/books/示例书#方框3.1 标题|🔗]]`.
-5. If a sidebar is irrelevant, repetitive, or purely decorative, it may be skipped, but the Agent should not treat it as a missing chapter.
-6. If the user explicitly asks to preserve all sidebars, include them as sub-bullets under the related chapter, not as top-level chapters.
-
-## Omission Repair Rule
-
-When an Agent finds that a chapter is missing, skipped, lacks notes, or has abnormal boundaries, it must not only repair the visible chapter. Run a full coverage check:
-
-- Re-read `toc.json` or the current TOC tree.
-- Check that every in-scope chapter appears in `outputs/reading_notes.md`.
-- Continue checking from the failed chapter to the final chapter.
-- Output a repair note describing what was missing and what changed.
-- Re-run the audit after repair.
-
-Example: if Chapter 2 was skipped, also check Chapter 3 through the final chapter instead of only filling Chapter 2.
-
-## Content Quality Check
-
-After structure extraction and reading-note writing, audit `outputs/reading_notes.md`.
-
-Check:
-
-1. `outputs/reading_notes.md` exists.
+1. Canonical reading notes file exists.
 2. Frontmatter includes `aliases`, `tags`, `author`, `source`, and `created`.
 3. All in-scope TOC chapter titles appear in the note.
 4. Every chapter has `核心定义/主张` or `核心主张`.
 5. Every chapter has `核心结论`.
-6. Every chapter has at least one backlink like `[[raw/books/示例书#章节标题|🔗]]`.
+6. Every chapter has at least one raw source Markdown backlink.
 7. The note contains `全书核心框架`.
 8. The note contains `金句`.
+9. HTML / Markdown formatting warnings are reported as `format_issues`.
 
-Do not proceed to completion if `audit_reading_notes.py` fails.
+Do not proceed to completion if the audit fails.
 
-## Cognitive Toolbox Stage
+## Update Index Manifest
 
-After `outputs/reading_notes.md` is complete and audited, the Agent may create a cognitive toolbox from the book.
+After audit, write:
 
-This stage includes:
+```text
+.cache/book-learning/{book_slug}/run_manifest.json
+```
 
-- Extracting 3-5 method cards
-- Updating a scene trigger index
-- Assigning optional scent vectors
-- Creating a knowledge invocation guide
-- Testing whether the method cards improve real task outputs
+Example:
 
-Core principle:
-
-- Reading notes explain what the book says.
-- Method cards make the book's methods callable in real tasks.
+```json
+{
+  "book_slug": "sample-book",
+  "raw_original": "raw/books/sample-book/sample-book.epub",
+  "raw_markdown": "raw/books/sample-book/sample-book.md",
+  "toc": ".cache/book-learning/sample-book/toc.json",
+  "chapters": ".cache/book-learning/sample-book/chapters/",
+  "audit": ".cache/book-learning/sample-book/audit.json",
+  "canonical_notes": "L1-事实与语义/02-📚 知识/sample-book-阅读笔记.md",
+  "index_status": "ready_for_index",
+  "scent": ["critical-thinking", "structured-reading"],
+  "created": "YYYY-MM-DD"
+}
+```
 
 Rules:
 
-- Do not create method cards before `outputs/reading_notes.md` is complete.
-- Do not create too many method cards.
-- Method cards must be actionable.
-- Method cards must have applicable and non-applicable scenes.
-- Method cards must include output templates.
-- Method cards must not be summaries.
-- Knowledge invocation must serve the user's current task.
+- `run_manifest.json` is the bridge file for text indexes, scent routing, vector systems, and future automation.
+- `book-learning-skill` does not require a vector database.
+- If a vector search or embedding skill exists, it can read `run_manifest.json` and index `canonical_notes`.
+- If no vector system exists, update the text scent index or tell the user that vector indexing is a follow-up.
+
+## Scent Index And Vector Index
+
+Text scent indexing is the baseline capability. Vector indexing is optional enhancement.
+
+Rules:
+
+- The skill outputs index-ready metadata through `run_manifest.json`.
+- Scent values are routing hints, not hard dependencies.
+- Vector search / embedding is handled by an external skill or user system.
+- Do not make vector search a requirement for learning a book.
+- The completion report should state whether the text index was updated, the `run_manifest.json` path, and whether vector indexing is still needed.
+
+## Cognitive Toolbox Stage
+
+After the canonical reading notes are complete and audited, the Agent may create a cognitive toolbox from the book only when useful or explicitly requested.
+
+This optional stage can include:
+
+- 3-5 method cards
+- Scene trigger index
+- Optional scent vectors
+- Invocation guide
+
+Rules:
+
+- Do not create method cards before the canonical reading notes are complete.
+- Method cards must be actionable and must not replace the reading notes.
 - Scent vectors are optional routing hints, not hard dependencies.
+- Do not restore default knowledge-card generation or per-chapter note files.
 
-Second-stage artifacts may include:
-
-```text
-assets/method_card_template.md
-assets/scene_index_template.md
-assets/scent_vector_template.md
-assets/invocation_report_template.md
-```
-
-Read these references only when needed:
-
-- `references/method_card_design.md`
-- `references/scene_trigger_index.md`
-- `references/scent_vector_routing.md`
-- `references/knowledge_invocation.md`
-
-Default output remains:
-
-```text
-outputs/reading_notes.md
-```
-
-Do not restore default knowledge-card generation or per-chapter note files.
-
-## Step 9: Completion Report
+## Completion Report
 
 Use this concise report:
 
@@ -475,13 +326,14 @@ Use this concise report:
   2. xxx
   3. xxx
 - **文件**：
-  - 原文：`raw/books/示例书`
-  - 笔记：`outputs/reading_notes.md`
-  - 如果已归档到知识库：`L1-事实与语义/02-📚 知识/书名-阅读笔记.md`
+  - 原始文件：`raw/books/示例书/示例书.epub`
+  - 原文 Markdown：`raw/books/示例书/示例书.md`
+  - 处理缓存：`.cache/book-learning/示例书/`
+  - 笔记：`{canonical_notes_path}`
+  - Manifest：`.cache/book-learning/示例书/run_manifest.json`
 - **审计**：PASS / FAIL + 原因
+- **索引**：文本索引已更新 / 未更新；向量索引已执行 / 需要后续执行
 ```
-
-Do not report knowledge card counts, per-chapter note counts, or `outputs/notes/`.
 
 If only part of the book was studied, explicitly write:
 
@@ -489,24 +341,17 @@ If only part of the book was studied, explicitly write:
 本次只覆盖第 X 章至第 Y 章，未覆盖全书。
 ```
 
-## Capability Boundaries
+## Failure Handling
 
-- Large books should still be processed chapter by chapter internally.
-- The final reading output remains one file.
-- Scanned PDFs depend on OCR quality.
-- Automatic card generation is outside the default workflow.
+- Missing converter: run `check_tools.py`, then tell the user which tool is missing.
+- Bad TOC: inspect Markdown headings and rerun extraction after improving heading structure.
+- Huge book: process chapter batches, but keep one global TOC and one final canonical reading notes file.
+- OCR quality issue: ask for a better scan or OCR pass before learning.
 
 ## Pitfalls
 
 - Do not confuse chapter split files with final notes.
 - Do not mark a chapter covered only because its heading exists.
-- Do not hide the book's definitions, frameworks, conclusions, or evidence behind generic commentary.
-- Do not omit backlinks.
-- Do not create many default `.notes.md` files unless the user explicitly asks for that style.
-
-## Failure Handling
-
-- Missing converter: run `check_tools.py`, then tell the user which tool is missing.
-- Bad TOC: inspect Markdown headings and rerun extraction after improving heading structure.
-- Huge book: process chapter batches, but keep one global TOC and one final `outputs/reading_notes.md`.
-- OCR quality issue: ask for a better scan or OCR pass before learning.
+- Do not hide definitions, frameworks, conclusions, or evidence behind generic commentary.
+- Do not omit raw source Markdown backlinks.
+- Do not keep duplicate `reading_notes.md` files across `outputs/` and a knowledge base.

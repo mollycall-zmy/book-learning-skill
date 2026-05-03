@@ -1,6 +1,6 @@
 ---
 card_type: scent-vector
-source_note: outputs/reading_notes.md
+source_note: "{canonical_notes_path}"
 scent:
   - critical-thinking
   - evidence-checking

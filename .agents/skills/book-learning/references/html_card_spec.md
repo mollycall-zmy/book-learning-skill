@@ -1,6 +1,6 @@
 # HTML Card Spec
 
-Use inline HTML cards only when they make `outputs/reading_notes.md` easier to scan in Markdown or Obsidian.
+Use inline HTML cards only when they make the canonical reading notes easier to scan in Markdown or Obsidian.
 
 ## Use Cases
 

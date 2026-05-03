@@ -71,15 +71,16 @@ Agent 在处理长文本时需要明确工作流，而不是自由发挥。这�
 - **细节保留**：定义、数据、案例、限定条件、反例和反常识观点都不能被粗暴压缩。
 - **来源可追溯**：每个观点都应能追溯到章节或行号。
 - **干货提炼**：优先提取定义、框架、结论和支撑证据，而不是泛泛分析。
-- **单一阅读笔记**：默认只生成一份完整的 `outputs/reading_notes.md`，方便长期阅读和归档。
+- **单一阅读笔记**：每轮只生成一份 canonical reading notes；有知识库路径时直接写入知识库，没有时才写入 `outputs/reading_notes.md`。
 - **知识调用**：阅读笔记完成后，可提炼方法卡、场景索引和调用协议，让书本知识参与真实任务。
 
 ## How It Works
 
 ```text
 User → Agent → book-learning skill
-             → 转 Markdown → 提取 TOC → 拆分章节
-             → 逐章阅读 → reading_notes.md → 内容审计
+             → raw source → raw Markdown
+             → .cache TOC / chapters / audit / manifest
+             → canonical reading notes → index-ready metadata
              → 方法卡 → 场景触发索引 → 知识调用
 ```
 
@@ -97,8 +98,8 @@ User → Agent → book-learning skill
 - [x] 将文档统一转换为 Markdown
 - [x] 从 Markdown 标题提取目录树
 - [x] 输出章节标题、层级、起止行号
-- [x] 按目录树拆分章节文件
-- [x] 生成单一 `outputs/reading_notes.md`
+- [x] 按目录树拆分章节文件到 `.cache/book-learning/`
+- [x] 生成单一 canonical reading notes
 - [x] 审计阅读笔记是否覆盖章节、核心字段和双链回链
 - [x] 提供阅读笔记章节模板
 - [x] 提供方法卡、场景触发索引、气味向量和调用报告模板
@@ -119,29 +120,38 @@ User → Agent → book-learning skill
 
 运行时内容默认放在 git 忽略的目录中：
 
-- `raw/books/`：原始书籍文件，只读保存
-- `outputs/`：转换后的 Markdown、TOC、章节拆分、阅读笔记和审计报告
+- `raw/books/`：原始文件 + 转换后的完整 Markdown，只读保存
+- `.cache/book-learning/`：TOC、章节切分、审计报告、运行 manifest
+- `outputs/reading_notes.md`：无知识库路径时的默认笔记
+- `L1/知识库路径`：有知识库路径时的唯一笔记输出
 
 主要输出物：
 
 | 输出物 | 说明 |
 | --- | --- |
-| `toc.json` | 目录树、章节层级、起止行号 |
-| `raw/books/{书名}.md` | 原文归档，作为阅读笔记的来源 |
-| `outputs/reading_notes.md` | 默认主要输出，一本书对应一份完整阅读笔记 |
-| `audit.json` | 阅读笔记审计报告 |
+| `raw/books/{book_slug}/{book_slug}.{ext}` | 原始源文件，只读保存 |
+| `raw/books/{book_slug}/{book_slug}.md` | 转换后的完整 Markdown，是双链和审计的 source of truth |
+| `.cache/book-learning/{book_slug}/toc.json` | 目录树、章节层级、起止行号 |
+| `.cache/book-learning/{book_slug}/chapters/` | 章节切分缓存，不是最终产物 |
+| `.cache/book-learning/{book_slug}/audit.json` | canonical reading notes 审计报告 |
+| `.cache/book-learning/{book_slug}/run_manifest.json` | 给索引、气味路由、可选向量系统读取的入口 |
+| `{canonical_notes_path}` | 唯一最终阅读笔记 |
 
-如果用户提供知识库或 Obsidian 路径，最终笔记也可以归档为：
+`canonical_notes_path` 的规则：
 
 ```text
-L1-事实与语义/02-📚 知识/{书名}-阅读笔记.md
+有知识库路径：L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+无知识库路径：outputs/reading_notes.md
 ```
+
+不会保留两份 `reading_notes.md`。如果有知识库路径，reading notes 直接输出到知识库；`raw` 不保存最终笔记；`chapters/` 是 cache，不是最终产物。
 
 ## 三层输出
 
 ### Layer 1: Reading Notes
 
-- 默认输出：`outputs/reading_notes.md`
+- 默认输出：`outputs/reading_notes.md`，仅在无知识库路径时使用
+- 知识库输出：`L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`
 - 保留原文结构、核心定义、关键框架、核心结论、支撑证据和原文回链
 - 这是基础工作流，不依赖第二阶段
 
@@ -158,7 +168,7 @@ L1-事实与语义/02-📚 知识/{书名}-阅读笔记.md
 - 方法卡调用协议
 - 调用测试样例
 
-Cognitive Toolbox 是第二阶段产物，不影响基础 `reading_notes.md` 工作流。
+Cognitive Toolbox 是第二阶段产物，不影响基础 canonical reading notes 工作流。
 
 ## 快速开始
 
@@ -185,17 +195,19 @@ python3 .agents/skills/book-learning/scripts/check_tools.py
 使用自造示例书测试：
 
 ```bash
-python3 .agents/skills/book-learning/scripts/extract_toc.py examples/sample_book.md --out outputs/toc.json
-python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_book.md --toc outputs/toc.json --out outputs/chapters
-python3 .agents/skills/book-learning/scripts/audit_reading_notes.py --toc outputs/toc.json --reading-notes outputs/reading_notes.md --out outputs/audit.json
+mkdir -p raw/books/示例书 .cache/book-learning/示例书
+cp examples/sample_book.md raw/books/示例书/示例书.md
+python3 .agents/skills/book-learning/scripts/extract_toc.py raw/books/示例书/示例书.md --out .cache/book-learning/示例书/toc.json
+python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/示例书/示例书.md --toc .cache/book-learning/示例书/toc.json --out .cache/book-learning/示例书/chapters
+python3 .agents/skills/book-learning/scripts/audit_reading_notes.py --toc .cache/book-learning/示例书/toc.json --reading-notes outputs/reading_notes.md --raw-source raw/books/示例书/示例书.md --out .cache/book-learning/示例书/audit.json
 ```
 
 使用你自己的 PDF / EPUB / DOCX / HTML：
 
 ```bash
-python3 .agents/skills/book-learning/scripts/convert_to_md.py path/to/your_book.pdf --out outputs/your_book.md
-python3 .agents/skills/book-learning/scripts/extract_toc.py outputs/your_book.md --out outputs/toc.json
-python3 .agents/skills/book-learning/scripts/split_chapters.py outputs/your_book.md --toc outputs/toc.json --out outputs/chapters
+python3 .agents/skills/book-learning/scripts/convert_to_md.py path/to/your_book.pdf --out raw/books/{book_slug}/{book_slug}.md
+python3 .agents/skills/book-learning/scripts/extract_toc.py raw/books/{book_slug}/{book_slug}.md --out .cache/book-learning/{book_slug}/toc.json
+python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/{book_slug}/{book_slug}.md --toc .cache/book-learning/{book_slug}/toc.json --out .cache/book-learning/{book_slug}/chapters
 ```
 
 请只使用你合法拥有或有权处理的书籍文件。不要把版权书籍、私人文件或转换后的输出提交到 Git 仓库。
@@ -263,6 +275,9 @@ book-learning-skill/
 │   ├── README.md
 │   └── images/
 │       └── cover.png
+├── raw/books/ (git ignored; source assets only)
+├── .cache/book-learning/ (git ignored; processing cache)
+├── outputs/ (git ignored; default notes only when no knowledge base path exists)
 └── .agents/
     └── skills/
         └── book-learning/
@@ -306,9 +321,9 @@ CLI smoke test：
 
 ```bash
 python3 .agents/skills/book-learning/scripts/check_tools.py
-python3 .agents/skills/book-learning/scripts/extract_toc.py examples/sample_book.md --out outputs/toc.json
-python3 .agents/skills/book-learning/scripts/split_chapters.py examples/sample_book.md --toc outputs/toc.json --out outputs/chapters
-python3 .agents/skills/book-learning/scripts/audit_reading_notes.py --toc outputs/toc.json --reading-notes outputs/reading_notes.md --out outputs/audit.json
+python3 .agents/skills/book-learning/scripts/extract_toc.py raw/books/示例书/示例书.md --out .cache/book-learning/示例书/toc.json
+python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/示例书/示例书.md --toc .cache/book-learning/示例书/toc.json --out .cache/book-learning/示例书/chapters
+python3 .agents/skills/book-learning/scripts/audit_reading_notes.py --toc .cache/book-learning/示例书/toc.json --reading-notes outputs/reading_notes.md --raw-source raw/books/示例书/示例书.md --out .cache/book-learning/示例书/audit.json
 ```
 
 ## License

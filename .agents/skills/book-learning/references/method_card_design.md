@@ -36,7 +36,7 @@ Method cards should be extracted from:
 
 ## Extraction Rules
 
-- Extract method cards only after `outputs/reading_notes.md` is complete and audited.
+- Extract method cards only after the canonical reading notes are complete and audited.
 - Each book should produce at most 3-5 method cards.
 - Prefer fewer, stronger cards over many shallow cards.
 - A method card must include applicable scenes, non-applicable scenes, steps, output template, challenge questions, and next actions.

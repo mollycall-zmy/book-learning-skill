@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit a consolidated reading_notes.md file against TOC JSON."""
+"""Audit a canonical consolidated reading notes file against TOC JSON."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from extract_toc import main_chapters_from_toc  # noqa: E402
 REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created")
 CORE_CLAIM_MARKERS = ("核心定义/主张", "核心主张")
 CORE_CONCLUSION_MARKERS = ("核心结论",)
-BACKLINK_RE = re.compile(r"\[\[raw/books/[^#\]]+#[^\]]+\]\]")
+GENERIC_RAW_SOURCE_BACKLINK_RE = re.compile(r"\[\[raw/books/(?!.*(?:^|/)chapters/)[^#\]]+(?:\.md)?#[^\]]+\]\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
 
 
@@ -85,8 +85,19 @@ def coverage_candidate_sections(sections: list[dict]) -> list[dict]:
     return [section for section in sections if section["level"] >= 2 and section["heading"] not in ignored]
 
 
-def backlinks_in_text(text: str) -> list[str]:
-    return BACKLINK_RE.findall(text)
+def backlink_pattern(raw_source_path: Path | None = None) -> re.Pattern[str]:
+    if raw_source_path is None:
+        return GENERIC_RAW_SOURCE_BACKLINK_RE
+
+    raw_source = raw_source_path.as_posix()
+    raw_source_no_ext = raw_source[:-3] if raw_source.endswith(".md") else raw_source
+    targets = {raw_source, raw_source_no_ext}
+    escaped_targets = "|".join(re.escape(target) for target in sorted(targets, key=len, reverse=True))
+    return re.compile(rf"\[\[(?:{escaped_targets})#[^\]]+\]\]")
+
+
+def backlinks_in_text(text: str, pattern: re.Pattern[str]) -> list[str]:
+    return pattern.findall(text)
 
 
 def is_table_row(line: str) -> bool:
@@ -145,12 +156,18 @@ def check_formatting(content: str) -> list[str]:
     return check_table_formatting(content) + check_mermaid_formatting(content)
 
 
-def find_coverage_for_toc_item(toc_item: dict, sections: list[dict], ambiguous_normalized_titles: set[str] | None = None) -> dict:
+def find_coverage_for_toc_item(
+    toc_item: dict,
+    sections: list[dict],
+    ambiguous_normalized_titles: set[str] | None = None,
+    backlink_re: re.Pattern[str] | None = None,
+) -> dict:
     title = toc_item["title"]
     normalized = normalize_title(title)
     ambiguous_normalized_titles = ambiguous_normalized_titles or set()
     normalized_is_ambiguous = normalized in ambiguous_normalized_titles
     candidates = coverage_candidate_sections(sections)
+    backlink_re = backlink_re or backlink_pattern()
 
     for section in candidates:
         if section["heading"] == title:
@@ -162,7 +179,7 @@ def find_coverage_for_toc_item(toc_item: dict, sections: list[dict], ambiguous_n
                 return {"covered": True, "matched_by": "normalized_heading", "covered_by": section["heading"], "section": section}
 
     for section in candidates:
-        for backlink in backlinks_in_text(section["text"]):
+        for backlink in backlinks_in_text(section["text"], backlink_re):
             if title in backlink or (not normalized_is_ambiguous and normalized and normalized in normalize_title(backlink)):
                 return {"covered": True, "matched_by": "backlink", "covered_by": section["heading"], "section": section}
 
@@ -183,6 +200,7 @@ def section_for_title(content: str, title: str, all_titles: list[str] | None = N
 def audit_reading_notes(
     toc_path: Path,
     reading_notes_path: Path,
+    raw_source_path: Path | None = None,
     *,
     min_lines: int = 15,
     max_level: int = 3,
@@ -229,6 +247,7 @@ def audit_reading_notes(
     frontmatter = extract_frontmatter(content)
     missing_fields = [field for field in REQUIRED_FRONTMATTER_FIELDS if field not in frontmatter]
     sections = extract_headings_and_sections(content)
+    backlink_re = backlink_pattern(raw_source_path)
 
     missing_chapters = []
     missing_core_claim = []
@@ -238,7 +257,7 @@ def audit_reading_notes(
 
     for entry in chapters:
         title = entry["title"]
-        coverage = find_coverage_for_toc_item(entry, sections, ambiguous_normalized_titles)
+        coverage = find_coverage_for_toc_item(entry, sections, ambiguous_normalized_titles, backlink_re)
         coverage_details.append(
             {
                 "id": entry["id"],
@@ -259,7 +278,7 @@ def audit_reading_notes(
             missing_core_claim.append(entry["id"])
         if not any(marker in section for marker in CORE_CONCLUSION_MARKERS):
             missing_core_conclusion.append(entry["id"])
-        if not BACKLINK_RE.search(section):
+        if not backlink_re.search(section):
             missing_backlinks.append(entry["id"])
 
     heading_titles = {section["heading"] for section in sections}
@@ -302,9 +321,10 @@ def audit_reading_notes(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Audit consolidated reading notes against TOC JSON.")
-    parser.add_argument("--toc", type=Path, required=True)
-    parser.add_argument("--reading-notes", type=Path, required=True)
+    parser = argparse.ArgumentParser(description="Audit canonical consolidated reading notes against TOC JSON.")
+    parser.add_argument("--toc", type=Path, required=True, help="TOC JSON, usually .cache/book-learning/{book_slug}/toc.json")
+    parser.add_argument("--reading-notes", type=Path, required=True, help="Canonical reading notes path")
+    parser.add_argument("--raw-source", type=Path, help="Raw source Markdown, usually raw/books/{book_slug}/{book_slug}.md")
     parser.add_argument("--min-lines", type=int, default=15)
     parser.add_argument("--max-level", type=int, default=3)
     parser.add_argument("--include-sidebars", action="store_true")
@@ -319,6 +339,7 @@ def main() -> int:
     report = audit_reading_notes(
         args.toc,
         args.reading_notes,
+        args.raw_source,
         min_lines=args.min_lines,
         max_level=args.max_level,
         include_sidebars=args.include_sidebars,

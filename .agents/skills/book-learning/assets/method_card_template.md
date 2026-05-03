@@ -10,7 +10,7 @@ scent:
   - credibility-analysis
 priority: high
 version: 1.0
-source_note: outputs/reading_notes.md
+source_note: "{canonical_notes_path}"
 ---
 
 # 方法卡：方法名称
@@ -67,8 +67,8 @@ source_note: outputs/reading_notes.md
 
 ## 来源
 
-- 阅读笔记：`outputs/reading_notes.md`
-- 原文：`raw/books/示例书`
+- 阅读笔记：`{canonical_notes_path}`
+- 原文：`raw/books/示例书/示例书.md`
 
 ## Rules
 

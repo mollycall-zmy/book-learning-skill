@@ -2,7 +2,7 @@
 
 The default workflow no longer creates a separate `outputs/book_summary.md`.
 
-Use `outputs/reading_notes.md` as the single complete reading output. Keep any whole-book summary inside the reading note, especially under:
+Use the canonical reading notes path as the single complete reading output. Keep any whole-book summary inside the reading note, especially under:
 
 - `> [!info] 全书一句话`
 - `## 全书核心框架`

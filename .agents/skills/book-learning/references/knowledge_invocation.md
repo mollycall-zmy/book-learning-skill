@@ -4,6 +4,16 @@ Knowledge invocation is the process of using method cards in real tasks.
 
 The Agent should not repeat the method card. It should transform the method card into task-specific analysis.
 
+## Index Boundary
+
+`book-learning-skill` outputs index-ready metadata, but it does not require a vector database.
+
+- Text scent indexing is the baseline capability.
+- Vector indexing is optional enhancement.
+- `.cache/book-learning/{book_slug}/run_manifest.json` is the bridge file for indexers and routing systems.
+- External vector search / embedding skills may read `run_manifest.json` and index the canonical reading notes.
+- If no vector system exists, update the text scent index or tell the user vector indexing can be done later.
+
 ## Invocation Flow
 
 1. Identify the user task type.

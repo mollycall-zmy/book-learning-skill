@@ -18,7 +18,7 @@ def load_module():
 
 def write_toc(path):
     toc = {
-        "source": "raw/books/示例书",
+        "source": "raw/books/示例书/示例书.md",
         "chapters": [
             {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40},
             {"id": "002", "title": "第二章 示例章节", "level": 2, "start_line": 41, "end_line": 80, "slug": "chapter-two", "line_count": 40},
@@ -33,7 +33,7 @@ def complete_notes():
 aliases: [示例书]
 tags: [书籍]
 author: 示例作者
-source: "[[raw/books/示例书]]"
+source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
 ---
 
@@ -54,7 +54,7 @@ created: 2026-01-01
 
 - 示例证据：作者用一个案例支撑了该结论。
 
-**来源回链**：[[raw/books/示例书#第一章 示例章节|🔗]]
+**来源回链**：[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
 ## 第二章 示例章节
 
@@ -70,7 +70,7 @@ created: 2026-01-01
 
 - 示例证据：作者用另一个案例支撑了该结论。
 
-**来源回链**：[[raw/books/示例书#第二章 示例章节|🔗]]
+**来源回链**：[[raw/books/示例书/示例书.md#第二章 示例章节|🔗]]
 
 ## 全书核心框架
 
@@ -94,7 +94,7 @@ class AuditReadingNotesTest(unittest.TestCase):
             notes_path = tmp_path / "reading_notes.md"
             notes_path.write_text(complete_notes(), encoding="utf-8")
 
-            report = module.audit_reading_notes(toc_path, notes_path)
+            report = module.audit_reading_notes(toc_path, notes_path, Path("raw/books/示例书/示例书.md"))
 
             self.assertTrue(report["passed"])
             self.assertTrue(report["frontmatter_passed"])
@@ -110,7 +110,7 @@ class AuditReadingNotesTest(unittest.TestCase):
             tmp_path = Path(tmp)
             toc_path = tmp_path / "toc.json"
             toc = {
-                "source": "raw/books/示例书",
+                "source": "raw/books/示例书/示例书.md",
                 "chapters": [
                     {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "main", "line_count": 40}
                 ],
@@ -131,7 +131,7 @@ class AuditReadingNotesTest(unittest.TestCase):
             tmp_path = Path(tmp)
             toc_path = tmp_path / "toc.json"
             toc = {
-                "source": "raw/books/示例书",
+                "source": "raw/books/示例书/示例书.md",
                 "chapters": [
                     {"id": "001", "title": "第一节 子主题 A", "level": 2, "start_line": 1, "end_line": 30, "slug": "a", "line_count": 30},
                     {"id": "002", "title": "第二节 子主题 B", "level": 2, "start_line": 31, "end_line": 60, "slug": "b", "line_count": 30},
@@ -144,7 +144,7 @@ class AuditReadingNotesTest(unittest.TestCase):
 aliases: [示例书]
 tags: [书籍]
 author: 示例作者
-source: "[[raw/books/示例书]]"
+source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
 ---
 
@@ -156,8 +156,8 @@ created: 2026-01-01
 
 **关键框架**：
 
-- 子主题 A：这里覆盖第一节内容（[[raw/books/示例书#第一节 子主题 A|🔗]]）
-- 子主题 B：这里覆盖第二节内容（[[raw/books/示例书#第二节 子主题 B|🔗]]）
+- 子主题 A：这里覆盖第一节内容（[[raw/books/示例书/示例书.md#第一节 子主题 A|🔗]]）
+- 子主题 B：这里覆盖第二节内容（[[raw/books/示例书/示例书.md#第二节 子主题 B|🔗]]）
 
 **核心结论**：两个子主题共同说明示例问题需要被结构化处理。
 
@@ -165,7 +165,7 @@ created: 2026-01-01
 
 - 示例证据：作者用案例支撑了两个子主题。
 
-**来源回链**：[[raw/books/示例书#第一节 子主题 A|🔗]]
+**来源回链**：[[raw/books/示例书/示例书.md#第一节 子主题 A|🔗]]
 
 ## 全书核心框架
 
@@ -196,7 +196,7 @@ created: 2026-01-01
             tmp_path = Path(tmp)
             toc_path = tmp_path / "toc.json"
             toc = {
-                "source": "raw/books/示例书",
+                "source": "raw/books/示例书/示例书.md",
                 "chapters": [
                     {"id": "001", "title": "第一节 子主题 A", "level": 2, "start_line": 1, "end_line": 30, "slug": "a", "line_count": 30},
                     {"id": "002", "title": "第二节 子主题 B", "level": 2, "start_line": 31, "end_line": 60, "slug": "b", "line_count": 30},
@@ -209,7 +209,7 @@ created: 2026-01-01
 aliases: [示例书]
 tags: [书籍]
 author: 示例作者
-source: "[[raw/books/示例书]]"
+source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
 ---
 
@@ -221,7 +221,7 @@ created: 2026-01-01
 
 **关键框架**：
 
-- 子主题 A：这里覆盖第一节内容（[[raw/books/示例书#第一节 子主题 A|🔗]]）
+- 子主题 A：这里覆盖第一节内容（[[raw/books/示例书/示例书.md#第一节 子主题 A|🔗]]）
 
 **核心结论**：这个子主题说明示例问题需要被结构化处理。
 
@@ -229,7 +229,7 @@ created: 2026-01-01
 
 - 示例证据：作者用案例支撑了该子主题。
 
-**来源回链**：[[raw/books/示例书#第一节 子主题 A|🔗]]
+**来源回链**：[[raw/books/示例书/示例书.md#第一节 子主题 A|🔗]]
 
 ## 全书核心框架
 
@@ -318,7 +318,7 @@ created: 2026-01-01
             toc_path = tmp_path / "toc.json"
             write_toc(toc_path)
             notes_path = tmp_path / "reading_notes.md"
-            notes_path.write_text(complete_notes().replace("[[raw/books/示例书#第二章 示例章节|🔗]]", "raw/books/示例书#第二章 示例章节"), encoding="utf-8")
+            notes_path.write_text(complete_notes().replace("[[raw/books/示例书/示例书.md#第二章 示例章节|🔗]]", "raw/books/示例书/示例书.md#第二章 示例章节"), encoding="utf-8")
 
             report = module.audit_reading_notes(toc_path, notes_path)
 
@@ -347,7 +347,7 @@ created: 2026-01-01
             tmp_path = Path(tmp)
             toc_path = tmp_path / "toc.json"
             toc = {
-                "source": "raw/books/示例书",
+                "source": "raw/books/示例书/示例书.md",
                 "chapters": [
                     {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40},
                     {"id": "002", "title": "方框1.1 示例侧栏", "level": 3, "start_line": 41, "end_line": 60, "slug": "box", "line_count": 20},
@@ -372,7 +372,7 @@ created: 2026-01-01
             tmp_path = Path(tmp)
             toc_path = tmp_path / "toc.json"
             toc = {
-                "source": "raw/books/示例书",
+                "source": "raw/books/示例书/示例书.md",
                 "chapters": [
                     {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40}
                 ],
@@ -384,7 +384,7 @@ created: 2026-01-01
 aliases: [示例书]
 tags: [书籍]
 author: 示例作者
-source: "[[raw/books/示例书]]"
+source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
 ---
 
@@ -392,9 +392,9 @@ created: 2026-01-01
 
 ## 第一章 示例章节
 
-**核心定义/主张**：这是核心定义。[[raw/books/示例书#第一章 示例章节|🔗]]
+**核心定义/主张**：这是核心定义。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
-**核心结论**：这是核心结论。[[raw/books/示例书#第一章 示例章节|🔗]]
+**核心结论**：这是核心结论。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
 ## 全书核心框架
 
@@ -413,6 +413,104 @@ created: 2026-01-01
 
             self.assertTrue(report["backlinks_passed"])
             self.assertEqual(report["format_issues"], [])
+
+    def test_raw_source_extensionless_backlinks_pass(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            toc = {
+                "source": "raw/books/示例书/示例书.md",
+                "chapters": [
+                    {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40}
+                ],
+            }
+            toc_path.write_text(json.dumps(toc, ensure_ascii=False), encoding="utf-8")
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(
+                """---
+aliases: [示例书]
+tags: [书籍]
+author: 示例作者
+source: "[[raw/books/示例书/示例书]]"
+created: 2026-01-01
+---
+
+# 📚 《示例书》
+
+## 第一章 示例章节
+
+**核心定义/主张**：这是核心定义。[[raw/books/示例书/示例书#第一章 示例章节|🔗]]
+
+**核心结论**：这是核心结论。[[raw/books/示例书/示例书#第一章 示例章节|🔗]]
+
+## 全书核心框架
+
+1. 框架一
+2. 框架二
+3. 框架三
+
+## 金句
+
+> “示例金句。”（第一章）
+""",
+                encoding="utf-8",
+            )
+
+            report = module.audit_reading_notes(toc_path, notes_path, Path("raw/books/示例书/示例书.md"))
+
+            self.assertTrue(report["passed"])
+            self.assertTrue(report["backlinks_passed"])
+            self.assertEqual(report["chapters_missing_backlinks"], [])
+
+    def test_chapter_cache_backlink_does_not_satisfy_raw_source_requirement(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            toc = {
+                "source": "raw/books/示例书/示例书.md",
+                "chapters": [
+                    {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40}
+                ],
+            }
+            toc_path.write_text(json.dumps(toc, ensure_ascii=False), encoding="utf-8")
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(
+                """---
+aliases: [示例书]
+tags: [书籍]
+author: 示例作者
+source: "[[raw/books/示例书/示例书.md]]"
+created: 2026-01-01
+---
+
+# 📚 《示例书》
+
+## 第一章 示例章节
+
+**核心定义/主张**：这是核心定义。[[.cache/book-learning/示例书/chapters/001-示例章节.md#第一章 示例章节|🔗]]
+
+**核心结论**：这是核心结论。[[.cache/book-learning/示例书/chapters/001-示例章节.md#第一章 示例章节|🔗]]
+
+## 全书核心框架
+
+1. 框架一
+2. 框架二
+3. 框架三
+
+## 金句
+
+> “示例金句。”（第一章）
+""",
+                encoding="utf-8",
+            )
+
+            report = module.audit_reading_notes(toc_path, notes_path, Path("raw/books/示例书/示例书.md"))
+
+            self.assertFalse(report["passed"])
+            self.assertFalse(report["backlinks_passed"])
+            self.assertIn("001", report["chapters_missing_backlinks"])
 
     def test_indented_table_format_issue_does_not_fail_audit(self):
         module = load_module()

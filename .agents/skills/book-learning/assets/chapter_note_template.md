@@ -1,6 +1,6 @@
 # Reading Notes Section Template
 
-Use this compact section format inside `outputs/reading_notes.md`.
+Use this compact section format inside the canonical reading notes path.
 
 Do not create separate `.notes.md` files by default.
 
@@ -28,7 +28,7 @@ Do not create difference by adding noise, new colors, heavy shadows, or decorati
 
 ## Component 1: Book One-Liner
 
-Use this near the top of `outputs/reading_notes.md`. It replaces the old callout style for the book's core claim.
+Use this near the top of the canonical reading notes. It replaces the old callout style for the book's core claim.
 
 ```html
 <div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
@@ -144,18 +144,29 @@ Use this for surface vs deeper cause, wrong vs correct interpretation, old vs ne
 
 ### {章节标题}
 
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书#{章节标题}|🔗]]
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
 
 **关键框架**：
 
-- 框架 1：说明其结构和含义。[[raw/books/示例书#{章节标题}|🔗]]
-- 框架 2：说明其结构和含义。[[raw/books/示例书#{章节标题}|🔗]]
+- 框架 1：说明其结构和含义。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
+- 框架 2：说明其结构和含义。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
 
 如果没有明确框架，可以省略 `关键框架`，不要硬填。
 
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书#{章节标题}|🔗]]
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
 
 **支撑证据**：
 
 - 证据 1：最有力的数据、研究、案例或论证链。
 - 证据 2：如果有第二个强证据再补充。
+
+## Backlink Rules
+
+Use raw source Markdown backlinks:
+
+```text
+[[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
+[[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]
+```
+
+Do not backlink to `.cache/book-learning/{book_slug}/chapters/`; chapter files are processing cache, not durable source targets.

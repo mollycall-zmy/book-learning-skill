@@ -1,15 +1,72 @@
 # Output Schema
 
+## Output Map
+
+Each run has these output locations:
+
+```text
+raw/books/{book_slug}/{book_slug}.md
+.cache/book-learning/{book_slug}/toc.json
+.cache/book-learning/{book_slug}/chapters/
+.cache/book-learning/{book_slug}/audit.json
+.cache/book-learning/{book_slug}/run_manifest.json
+{canonical_notes_path}
+```
+
+`canonical_notes_path` is one of:
+
+```text
+{user_provided_knowledge_path}/{book_slug}-阅读笔记.md
+outputs/reading_notes.md
+```
+
+Use `outputs/reading_notes.md` only when the user has not provided a knowledge base path. Do not create or preserve duplicate reading notes under `raw/`, `raw/books/{book_slug}/outputs/`, or both `outputs/` and `L1`.
+
+## Raw Source
+
+Raw source paths:
+
+```text
+raw/books/{book_slug}/{book_slug}.{ext}
+raw/books/{book_slug}/{book_slug}.md
+```
+
+Rules:
+
+- Raw stores only the original source asset and converted full Markdown.
+- Raw files are treated as read-only after creation.
+- `{book_slug}.md` is the source of truth for Obsidian backlinks and audits.
+- Do not put `reading_notes.md`, `chapters/`, `audit.json`, or `run_manifest.json` in `raw/`.
+
+## Cache Artifacts
+
+Cache paths:
+
+```text
+.cache/book-learning/{book_slug}/toc.json
+.cache/book-learning/{book_slug}/chapters/
+.cache/book-learning/{book_slug}/audit.json
+.cache/book-learning/{book_slug}/run_manifest.json
+```
+
+Rules:
+
+- `toc.json` is a processing index.
+- `chapters/` is the chapter split used for internal reading.
+- `audit.json` records the audit of the canonical reading notes.
+- `run_manifest.json` is the bridge file for text indexes, scent routing, vector systems, and future automation.
+- Cache is not final Obsidian knowledge content.
+
 ## TOC JSON
 
 ```json
 {
-  "source": "outputs/book.md",
+  "source": "raw/books/示例书/示例书.md",
   "chapters": [
     {
       "id": "001",
-      "title": "Chapter Title",
-      "level": 1,
+      "title": "第一章 示例章节",
+      "level": 2,
       "start_line": 10,
       "end_line": 85,
       "line_count": 76,
@@ -32,37 +89,15 @@
 }
 ```
 
-Line numbers are 1-based and inclusive.
-
-`chapters` should contain main chapters by default. `filtered_out` is retained for debugging and may include TOC headings, sidebars, box fragments, deep headings, short fragments, or decorative headings.
-
-## Raw Source
-
-Default path:
-
-```text
-raw/books/{书名}.md
-```
-
-The raw source is archived for traceability. Treat it as read-only.
+Line numbers are 1-based and inclusive. `chapters` should contain main chapters by default. `filtered_out` is retained for debugging and may include TOC headings, sidebars, box fragments, deep headings, short fragments, or decorative headings.
 
 ## Reading Notes
 
-Default path:
+Canonical reading notes path:
 
 ```text
-outputs/reading_notes.md
+{canonical_notes_path}
 ```
-
-This is the primary reading output.
-
-If the user provides a knowledge base or Obsidian path, the same note may be archived as:
-
-```text
-L1-事实与语义/02-📚 知识/{书名}-阅读笔记.md
-```
-
-Do not hard-code that path in the open-source workflow.
 
 Required structure:
 
@@ -71,91 +106,46 @@ Required structure:
 aliases: [示例书]
 tags: [书籍, 分类]
 author: 示例作者
-source: "[[raw/books/示例书]]"
+source: "[[raw/books/示例书/示例书.md]]"
 created: YYYY-MM-DD
 ---
 
 # 📚 《示例书》— 示例作者
 
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
-    全书一句话
-  </div>
-  <div style="font-size: 20px; line-height: 1.7; color: #222; font-weight: 600;">
-    这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
-  </div>
-</div>
-
 ## 目录
 
 - [[#第一章 示例章节]]
-- [[#第二章 示例章节]]
 
 ## 第一章 示例章节
 
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书#第一章 示例章节|🔗]]
+**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
 **关键框架**：
 
-- 框架 / 方法 / 分类 / 模型 1：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
-- 框架 / 方法 / 分类 / 模型 2：说明其结构和含义。[[raw/books/示例书#子节标题|🔗]]
+- 框架 / 方法 / 分类 / 模型：说明其结构和含义。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书#第一章 示例章节|🔗]]
+**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
 **支撑证据**：
 
-- 证据 1：最有力的数据、研究、案例或原文论证。
-- 证据 2：如果有第二个强证据，再补充；不要罗列弱故事。
+- 证据：最有力的数据、研究、案例或原文论证。
 
 ## 全书核心框架
 
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
-    全书核心框架
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 02</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架二</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架二的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 03</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架三</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架三的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 04</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架四</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架四的作用和含义。</div>
-    </div>
-  </div>
-</div>
+概括全书最重要的模型、框架或方法。
 
 ## 金句
 
-> 1. “原文金句。”（第 X 章）
+> 1. “示例金句。”（第一章）
 ```
 
 Rules:
 
 - Every in-scope chapter must appear in this file.
-
-Reading Notes Section Schema:
-
 - Every chapter must include `核心定义/主张` or `核心主张`.
 - Every chapter must include `核心结论`.
-- Every chapter must include at least one backlink to the raw source.
-- `核心定义/主张` must include a backlink: `[[raw/books/{书名}#{标题}|🔗]]`.
+- Every chapter must include at least one backlink to the raw source Markdown.
+- `核心定义/主张` must include a backlink.
 - `核心结论` should include a backlink.
 - `关键框架` is required when the chapter contains a model, method, classification, process, or structure.
 - If `关键框架` is present, each item should include a backlink.
@@ -164,7 +154,27 @@ Reading Notes Section Schema:
 - Do not invent frameworks or evidence just to fill a field.
 - Long books may be grouped by part, section, or theme, but chapters must not be omitted.
 
-Formatting constraints:
+## Backlink Schema
+
+Recommended raw source Markdown backlink:
+
+```text
+[[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
+```
+
+Accepted Obsidian extensionless backlink:
+
+```text
+[[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]
+```
+
+Rules:
+
+- Backlinks must target the converted full Markdown source under `raw/books/{book_slug}/`.
+- Do not target `.cache/book-learning/{book_slug}/chapters/`.
+- Do not use chapter split files as durable source links.
+
+## Formatting Constraints
 
 - Tables must not be indented.
 - Tables must have a blank line before them.
@@ -176,7 +186,7 @@ Formatting constraints:
 
 ## HTML Card Components
 
-`outputs/reading_notes.md` may contain inline HTML components for high-level visual sections.
+The canonical reading notes may contain inline HTML components for high-level visual sections.
 
 Supported components:
 
@@ -188,27 +198,25 @@ Supported components:
 Rules:
 
 - HTML must use inline style.
-- Do not use external CSS.
-- Do not use JavaScript.
-- Do not use dark card backgrounds.
-- Do not use heavy shadows.
-- Do not use top border decoration.
-- Do not use full border declarations outside lightweight process nodes.
-- Use warm gradient background only on outer containers.
-- Use white cards for content blocks.
-- Use gold gradient only for key process nodes.
-- One-liner cards should be flat gradient panels without inner cards.
-- Process flow normal nodes should be lightweight and shadowless.
-- Core framework cards may keep light shadows and thin gold dividers.
-- Comparison cards should use a two-column contrast layout with subtle background difference and a center divider.
+- Do not use external CSS or JavaScript.
+- Do not use dark card backgrounds, heavy shadows, top border decoration, or large decorative color blocks.
 - Keep ordinary chapter notes in Markdown unless visualization improves readability.
 
 ## Reading Notes Audit JSON
+
+Path:
+
+```text
+.cache/book-learning/{book_slug}/audit.json
+```
+
+Schema:
 
 ```json
 {
   "reading_notes_exists": true,
   "checked_chapters": 2,
+  "covered_chapters": 2,
   "filtered_out_count": 3,
   "frontmatter_passed": true,
   "missing_frontmatter_fields": [],
@@ -221,61 +229,60 @@ Rules:
   "backlinks_passed": true,
   "chapters_missing_backlinks": [],
   "format_issues": [],
+  "coverage_details": [],
   "has_core_framework": true,
   "has_quotes": true,
   "passed": true
 }
 ```
 
+## Run Manifest
+
+Path:
+
+```text
+.cache/book-learning/{book_slug}/run_manifest.json
+```
+
+Schema:
+
+```json
+{
+  "book_slug": "sample-book",
+  "raw_original": "raw/books/sample-book/sample-book.epub",
+  "raw_markdown": "raw/books/sample-book/sample-book.md",
+  "toc": ".cache/book-learning/sample-book/toc.json",
+  "chapters": ".cache/book-learning/sample-book/chapters/",
+  "audit": ".cache/book-learning/sample-book/audit.json",
+  "canonical_notes": "L1-事实与语义/02-📚 知识/sample-book-阅读笔记.md",
+  "index_status": "ready_for_index",
+  "scent": ["critical-thinking", "structured-reading"],
+  "created": "YYYY-MM-DD"
+}
+```
+
+Rules:
+
+- `run_manifest.json` is for indexers, scent routing, vector systems, and later automation.
+- `index_status` should be `ready_for_index` after audit passes.
+- `scent` is optional metadata for text routing.
+- The skill does not require a vector database.
+
 ## Cognitive Toolbox Artifacts
 
-These are second-stage outputs created only after `outputs/reading_notes.md` is complete and audited.
+These are optional second-stage outputs created only after the canonical reading notes are complete and audited.
 
-### Method Cards
-
-Recommended path:
+Recommended paths:
 
 ```text
 outputs/cognitive_toolbox/method_cards/
-```
-
-Each method card should follow `assets/method_card_template.md` and include:
-
-- applicable scenes
-- non-applicable scenes
-- core checks
-- usage steps
-- output template
-- challenge questions
-- next actions
-- source note path
-
-### Scene Trigger Index
-
-Recommended path:
-
-```text
 outputs/cognitive_toolbox/scene_trigger_index.md
-```
-
-The index should map task types to semantic triggers, typical user expressions, primary method cards, and backup method cards.
-
-### Scent Vector
-
-Recommended path:
-
-```text
 outputs/cognitive_toolbox/scent_vector.md
-```
-
-Scent vectors are optional semantic routing hints. They should not be required for open-source usage.
-
-### Invocation Report
-
-Recommended path:
-
-```text
 outputs/cognitive_toolbox/invocation_report.md
 ```
 
-Use this only when testing whether method cards improve real task outputs.
+Rules:
+
+- Method cards should include the canonical reading notes path as their source note.
+- Scent vectors are optional semantic routing hints.
+- Invocation reports are only for testing whether method cards improve real task outputs.
