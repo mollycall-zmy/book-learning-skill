@@ -13,10 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from extract_toc import main_chapters_from_toc  # noqa: E402
 
 
-REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created")
+REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created", "scent")
 CORE_CLAIM_MARKERS = ("核心定义/主张", "核心主张")
 CORE_CONCLUSION_MARKERS = ("核心结论",)
-GENERIC_RAW_SOURCE_BACKLINK_RE = re.compile(r"\[\[raw/books/(?!.*(?:^|/)chapters/)[^#\]]+(?:\.md)?#[^\]]+\]\]")
+WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
 
 
@@ -85,19 +85,45 @@ def coverage_candidate_sections(sections: list[dict]) -> list[dict]:
     return [section for section in sections if section["level"] >= 2 and section["heading"] not in ignored]
 
 
-def backlink_pattern(raw_source_path: Path | None = None) -> re.Pattern[str]:
-    if raw_source_path is None:
-        return GENERIC_RAW_SOURCE_BACKLINK_RE
-
-    raw_source = raw_source_path.as_posix()
-    raw_source_no_ext = raw_source[:-3] if raw_source.endswith(".md") else raw_source
-    targets = {raw_source, raw_source_no_ext}
-    escaped_targets = "|".join(re.escape(target) for target in sorted(targets, key=len, reverse=True))
-    return re.compile(rf"\[\[(?:{escaped_targets})#[^\]]+\]\]")
+def split_wikilink_target(target: str) -> tuple[str, str]:
+    target = target.split("|", 1)[0].strip()
+    if "#" not in target:
+        return target, ""
+    path, heading = target.split("#", 1)
+    return path.strip(), heading.strip()
 
 
-def backlinks_in_text(text: str, pattern: re.Pattern[str]) -> list[str]:
-    return pattern.findall(text)
+def raw_source_wikilinks(text: str) -> list[dict[str, str]]:
+    links = []
+    for match in WIKILINK_RE.finditer(text):
+        path, heading = split_wikilink_target(match.group(1))
+        normalized_path = path.replace("\\", "/")
+        if "raw/books/" not in normalized_path:
+            continue
+        if ".cache/" in normalized_path or "/chapters/" in normalized_path or normalized_path.startswith("chapters/"):
+            continue
+        if not heading:
+            continue
+        links.append({"link": match.group(0), "path": path, "heading": heading})
+    return links
+
+
+def heading_matches_title(heading: str, title: str, normalized_is_ambiguous: bool = False) -> bool:
+    normalized_heading = normalize_title(heading)
+    normalized_title = normalize_title(title)
+    if heading == title or title in heading:
+        return True
+    if normalized_is_ambiguous:
+        return False
+    return bool(normalized_heading and normalized_title and (normalized_heading == normalized_title or normalized_title in normalized_heading))
+
+
+def raw_backlinks_for_title(text: str, title: str, normalized_is_ambiguous: bool = False) -> list[dict[str, str]]:
+    return [
+        link
+        for link in raw_source_wikilinks(text)
+        if heading_matches_title(link["heading"], title, normalized_is_ambiguous)
+    ]
 
 
 def is_table_row(line: str) -> bool:
@@ -160,14 +186,12 @@ def find_coverage_for_toc_item(
     toc_item: dict,
     sections: list[dict],
     ambiguous_normalized_titles: set[str] | None = None,
-    backlink_re: re.Pattern[str] | None = None,
 ) -> dict:
     title = toc_item["title"]
     normalized = normalize_title(title)
     ambiguous_normalized_titles = ambiguous_normalized_titles or set()
     normalized_is_ambiguous = normalized in ambiguous_normalized_titles
     candidates = coverage_candidate_sections(sections)
-    backlink_re = backlink_re or backlink_pattern()
 
     for section in candidates:
         if section["heading"] == title:
@@ -179,9 +203,8 @@ def find_coverage_for_toc_item(
                 return {"covered": True, "matched_by": "normalized_heading", "covered_by": section["heading"], "section": section}
 
     for section in candidates:
-        for backlink in backlinks_in_text(section["text"], backlink_re):
-            if title in backlink or (not normalized_is_ambiguous and normalized and normalized in normalize_title(backlink)):
-                return {"covered": True, "matched_by": "backlink", "covered_by": section["heading"], "section": section}
+        if raw_backlinks_for_title(section["text"], title, normalized_is_ambiguous):
+            return {"covered": True, "matched_by": "backlink", "covered_by": section["heading"], "section": section}
 
     if not normalized_is_ambiguous:
         for section in candidates:
@@ -247,7 +270,6 @@ def audit_reading_notes(
     frontmatter = extract_frontmatter(content)
     missing_fields = [field for field in REQUIRED_FRONTMATTER_FIELDS if field not in frontmatter]
     sections = extract_headings_and_sections(content)
-    backlink_re = backlink_pattern(raw_source_path)
 
     missing_chapters = []
     missing_core_claim = []
@@ -257,7 +279,7 @@ def audit_reading_notes(
 
     for entry in chapters:
         title = entry["title"]
-        coverage = find_coverage_for_toc_item(entry, sections, ambiguous_normalized_titles, backlink_re)
+        coverage = find_coverage_for_toc_item(entry, sections, ambiguous_normalized_titles)
         coverage_details.append(
             {
                 "id": entry["id"],
@@ -278,7 +300,7 @@ def audit_reading_notes(
             missing_core_claim.append(entry["id"])
         if not any(marker in section for marker in CORE_CONCLUSION_MARKERS):
             missing_core_conclusion.append(entry["id"])
-        if not backlink_re.search(section):
+        if not raw_backlinks_for_title(section, title, normalize_title(title) in ambiguous_normalized_titles):
             missing_backlinks.append(entry["id"])
 
     heading_titles = {section["heading"] for section in sections}

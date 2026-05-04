@@ -4,6 +4,14 @@ Use this compact section format inside the canonical reading notes path.
 
 Do not create separate `.notes.md` files by default.
 
+Required high-level components:
+
+- `全书一句话` must use Component 1.
+- `## 全书核心框架` must use Component 3.
+- Process-like frameworks should use Component 2.
+- Contrastive ideas should use Component 4.
+- Reading notes frontmatter must include 3-5 useful `scent` tags.
+
 ## Card Differentiation Principle
 
 The design system is unified, but card types must be visually distinguishable.

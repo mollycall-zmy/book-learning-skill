@@ -35,6 +35,9 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
 # 📚 《示例书》— 示例作者
@@ -146,6 +149,9 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
 # 📚 《示例书》— 示例作者
@@ -211,6 +217,9 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
 # 📚 《示例书》— 示例作者
@@ -263,6 +272,24 @@ created: 2026-01-01
             self.assertFalse(report["passed"])
             self.assertFalse(report["frontmatter_passed"])
             self.assertIn("aliases", report["missing_frontmatter_fields"])
+
+    def test_missing_scent_frontmatter_fails(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            write_toc(toc_path)
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(
+                complete_notes().replace("scent:\n  - critical-thinking\n  - structured-reading\n", ""),
+                encoding="utf-8",
+            )
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertFalse(report["passed"])
+            self.assertFalse(report["frontmatter_passed"])
+            self.assertIn("scent", report["missing_frontmatter_fields"])
 
     def test_missing_chapter_fails(self):
         module = load_module()
@@ -386,6 +413,9 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
 # 📚 《示例书》
@@ -434,6 +464,9 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书]]"
 created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
 # 📚 《示例书》
@@ -463,6 +496,58 @@ created: 2026-01-01
             self.assertTrue(report["backlinks_passed"])
             self.assertEqual(report["chapters_missing_backlinks"], [])
 
+    def test_absolute_raw_source_backlinks_pass(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            toc = {
+                "source": "raw/books/示例书/示例书.md",
+                "chapters": [
+                    {"id": "001", "title": "第一章 示例章节", "level": 2, "start_line": 1, "end_line": 40, "slug": "chapter-one", "line_count": 40}
+                ],
+            }
+            toc_path.write_text(json.dumps(toc, ensure_ascii=False), encoding="utf-8")
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(
+                """---
+aliases: [示例书]
+tags: [书籍]
+author: 示例作者
+source: "[[/tmp/example-knowledge-root/raw/books/示例书/示例书.md]]"
+created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
+---
+
+# 📚 《示例书》
+
+## 第一章 示例章节
+
+**核心定义/主张**：这是核心定义。[[/tmp/example-knowledge-root/raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
+
+**核心结论**：这是核心结论。[[~/example-knowledge-root/raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
+
+## 全书核心框架
+
+1. 框架一
+2. 框架二
+3. 框架三
+
+## 金句
+
+> “示例金句。”（第一章）
+""",
+                encoding="utf-8",
+            )
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertTrue(report["passed"])
+            self.assertTrue(report["backlinks_passed"])
+            self.assertEqual(report["chapters_missing_backlinks"], [])
+
     def test_chapter_cache_backlink_does_not_satisfy_raw_source_requirement(self):
         module = load_module()
         with tempfile.TemporaryDirectory() as tmp:
@@ -483,6 +568,9 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
 # 📚 《示例书》

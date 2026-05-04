@@ -24,7 +24,7 @@
 
 **From book notes to callable thinking tools.**
 
-`book-learning-skill` 是一个面向 AI Agent 的读书与知识调用技能。它不只是把书转成 Markdown 或普通读书笔记，而是进一步把书中的知识提炼成方法卡、场景触发索引和可调用的思维工具，让 Agent 在真实任务中能够主动使用书本知识。
+`book-learning-skill` 是一个面向 AI Agent 的读书与知识调用技能。它不只是把书转成 Markdown 或普通读书笔记，而是进一步把书中的知识归档到用户的 `knowledge_root` / memory palace，提炼成方法卡、场景触发索引和可调用的思维工具，让 Agent 在真实任务中能够主动使用书本知识。
 
 目标不是“读完一本书”，而是让书里的知识真正参与方案评估、商业策划、批判性思考、决策判断、复盘分析和结构化写作。
 
@@ -71,7 +71,9 @@ Agent 在处理长文本时需要明确工作流，而不是自由发挥。这�
 - **细节保留**：定义、数据、案例、限定条件、反例和反常识观点都不能被粗暴压缩。
 - **来源可追溯**：每个观点都应能追溯到章节或行号。
 - **干货提炼**：优先提取定义、框架、结论和支撑证据，而不是泛泛分析。
-- **单一阅读笔记**：每轮只生成一份 canonical reading notes；有知识库路径时直接写入知识库，没有时才写入 `outputs/reading_notes.md`。
+- **单一阅读笔记**：每轮只生成一份 canonical reading notes；有 `knowledge_root` 时直接写入知识库，没有时才写入 `outputs/reading_notes.md`。
+- **路径不硬编码**：知识库路径必须来自参数、环境变量、配置文件、Agent 上下文或用户输入。
+- **气味索引**：阅读笔记 frontmatter 和 run manifest 都记录 scent tags，供文本索引和可选向量索引使用。
 - **知识调用**：阅读笔记完成后，可提炼方法卡、场景索引和调用协议，让书本知识参与真实任务。
 
 ## How It Works
@@ -80,7 +82,7 @@ Agent 在处理长文本时需要明确工作流，而不是自由发挥。这�
 User → Agent → book-learning skill
              → raw source → raw Markdown
              → .cache TOC / chapters / audit / manifest
-             → canonical reading notes → index-ready metadata
+             → canonical reading notes → scent index / index-ready metadata
              → 方法卡 → 场景触发索引 → 知识调用
 ```
 
@@ -101,6 +103,9 @@ User → Agent → book-learning skill
 - [x] 按目录树拆分章节文件到 `.cache/book-learning/`
 - [x] 生成单一 canonical reading notes
 - [x] 审计阅读笔记是否覆盖章节、核心字段和双链回链
+- [x] 支持 `knowledge_root` / memory palace 归档路径抽象
+- [x] 要求高层视觉区使用 HTML 卡片组件
+- [x] 将 scent tags 写入笔记 frontmatter 和 run manifest
 - [x] 提供阅读笔记章节模板
 - [x] 提供方法卡、场景触发索引、气味向量和调用报告模板
 - [x] 提供 Agent Skill 标准目录结构
@@ -122,8 +127,8 @@ User → Agent → book-learning skill
 
 - `raw/books/`：原始文件 + 转换后的完整 Markdown，只读保存
 - `.cache/book-learning/`：TOC、章节切分、审计报告、运行 manifest
-- `outputs/reading_notes.md`：无知识库路径时的默认笔记
-- `L1/知识库路径`：有知识库路径时的唯一笔记输出
+- `outputs/reading_notes.md`：无 `knowledge_root` 时的默认笔记
+- `{knowledge_root}/L1-事实与语义/02-📚 知识/`：有 `knowledge_root` 时的唯一笔记输出
 
 主要输出物：
 
@@ -137,22 +142,33 @@ User → Agent → book-learning skill
 | `.cache/book-learning/{book_slug}/run_manifest.json` | 给索引、气味路由、可选向量系统读取的入口 |
 | `{canonical_notes_path}` | 唯一最终阅读笔记 |
 
+`knowledge_root` 解析优先级：
+
+1. 本次运行显式传入 `--knowledge-root`
+2. 环境变量 `BOOK_LEARNING_KNOWLEDGE_ROOT`
+3. `.book-learning/config.json` 或 `book-learning.config.json`
+4. Agent 上下文中明确约定的 `knowledge_root` / `memory_palace_root`
+5. 如果都没有，Agent 会询问是否归档到知识库
+6. 用户跳过归档时，fallback 到 `outputs/reading_notes.md`
+
 `canonical_notes_path` 的规则：
 
 ```text
-有知识库路径：L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
-无知识库路径：outputs/reading_notes.md
+有 knowledge_root：{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+无 knowledge_root：outputs/reading_notes.md
 ```
 
-不会保留两份 `reading_notes.md`。如果有知识库路径，reading notes 直接输出到知识库；`raw` 不保存最终笔记；`chapters/` 是 cache，不是最终产物。
+不会保留两份 `reading_notes.md`。如果有 `knowledge_root`，reading notes 直接输出到知识库；`raw` 不保存最终笔记；`chapters/` 是 cache，不是最终产物。开源仓库不会硬编码个人知识库路径。
 
 ## 三层输出
 
 ### Layer 1: Reading Notes
 
-- 默认输出：`outputs/reading_notes.md`，仅在无知识库路径时使用
-- 知识库输出：`L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`
+- 默认输出：`outputs/reading_notes.md`，仅在无 `knowledge_root` 时使用
+- 知识库输出：`{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`
 - 保留原文结构、核心定义、关键框架、核心结论、支撑证据和原文回链
+- `全书一句话` 和 `全书核心框架` 必须使用内联 HTML 卡片组件
+- frontmatter 必须包含 3-5 个有用的 `scent` tags
 - 这是基础工作流，不依赖第二阶段
 
 ### Layer 2: Method Cards
@@ -182,6 +198,10 @@ Cognitive Toolbox 是第二阶段产物，不影响基础 canonical reading note
 
 Agent 会根据 `.agents/skills/book-learning/SKILL.md` 执行工作流。
 
+如果没有任何 `knowledge_root` 路径约定，Agent 会询问：
+
+> 是否要归档到你的知识库？请提供 knowledge_root 路径。若不提供，将只输出到 outputs/reading_notes.md。
+
 ### 方式二：手动运行脚本
 
 ```bash
@@ -205,10 +225,12 @@ python3 .agents/skills/book-learning/scripts/audit_reading_notes.py --toc .cache
 使用你自己的 PDF / EPUB / DOCX / HTML：
 
 ```bash
-python3 .agents/skills/book-learning/scripts/convert_to_md.py path/to/your_book.pdf --out raw/books/{book_slug}/{book_slug}.md
+python3 .agents/skills/book-learning/scripts/convert_to_md.py path/to/示例书.pdf --out raw/books/{book_slug}/{book_slug}.md
 python3 .agents/skills/book-learning/scripts/extract_toc.py raw/books/{book_slug}/{book_slug}.md --out .cache/book-learning/{book_slug}/toc.json
 python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/{book_slug}/{book_slug}.md --toc .cache/book-learning/{book_slug}/toc.json --out .cache/book-learning/{book_slug}/chapters
 ```
+
+使用知识库归档时，请通过参数、环境变量、配置文件或 Agent 上下文提供 `knowledge_root`。不要把个人本机路径写入仓库文件。
 
 请只使用你合法拥有或有权处理的书籍文件。不要把版权书籍、私人文件或转换后的输出提交到 Git 仓库。
 
@@ -277,7 +299,7 @@ book-learning-skill/
 │       └── cover.png
 ├── raw/books/ (git ignored; source assets only)
 ├── .cache/book-learning/ (git ignored; processing cache)
-├── outputs/ (git ignored; default notes only when no knowledge base path exists)
+├── outputs/ (git ignored; default notes only when no knowledge_root exists)
 └── .agents/
     └── skills/
         └── book-learning/

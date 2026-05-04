@@ -2,20 +2,47 @@
 
 ## Purpose
 
-Turn a whole book into one durable knowledge artifact with clear lifecycle boundaries:
+Turn a whole book into one durable knowledge artifact that can connect to a user knowledge base or memory palace without hard-coding personal paths.
+
+Lifecycle boundaries:
 
 - `raw` = read-only source assets
 - `.cache` = system intermediate artifacts
-- `L1 / knowledge` = the only knowledge output when a knowledge base path exists
+- `knowledge_root / memory_palace_root` = user knowledge base root
+- `canonical_notes_path` = the only reading notes output path
 - `index` = callable entry metadata
 
 Do not keep the same `reading_notes.md` in both `outputs/` and a knowledge base. Each run has exactly one canonical reading notes path.
 
+## Path Resolution
+
+Resolve `knowledge_root` in this priority order:
+
+1. User-provided `--knowledge-root`.
+2. Environment variable `BOOK_LEARNING_KNOWLEDGE_ROOT`.
+3. Project config file `.book-learning/config.json` or `book-learning.config.json`.
+4. Agent context with an explicit `knowledge_root` or `memory_palace_root`.
+5. If none exists, ask the user: `是否要归档到你的知识库？请提供 knowledge_root 路径。若不提供，将只输出到 outputs/reading_notes.md。`
+6. If the user does not provide a path or skips archival, use `outputs/reading_notes.md`.
+
+Canonical notes path:
+
+```text
+{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+outputs/reading_notes.md
+```
+
+Rules:
+
+- Use the knowledge path only when `knowledge_root` exists.
+- Do not guess a knowledge base path.
+- Do not hard-code personal local paths in code, docs, templates, tests, or output.
+- If a temporary note must be moved to `knowledge_root`, delete the temporary duplicate after moving.
+- `run_manifest.json`, the scent index, and the completion report must point to the final canonical notes path.
+
 ## Directory Responsibilities
 
 ### Raw Layer
-
-Raw stores only source assets:
 
 ```text
 raw/books/{book_slug}/
@@ -27,11 +54,9 @@ Rules:
 
 - Raw files are read-only after creation.
 - `{book_slug}.md` must be retained as the Markdown source of truth for Obsidian backlinks and audits.
-- Do not put `reading_notes.md`, `chapters/`, `audit.json`, or `run_manifest.json` under `raw/`.
+- Do not put `reading_notes.md`, `chapters/`, `audit.json`, `run_manifest.json`, or `outputs/` under `raw/`.
 
 ### Cache Layer
-
-Intermediate artifacts go under:
 
 ```text
 .cache/book-learning/{book_slug}/
@@ -46,31 +71,32 @@ Rules:
 - `toc.json` is the processing index.
 - `chapters/` is a temporary split for chapter-sized reading.
 - `audit.json` is the audit report for the canonical notes.
-- `run_manifest.json` bridges the run to text indexes, scent routing, and optional vector systems.
-- Cache can be kept for debugging or cleaned later. It is not final Obsidian knowledge content.
+- `run_manifest.json` records all run artifact paths.
+- Cache can be kept for debugging or cleaned later.
+- Cache is not final Obsidian knowledge content.
+- `chapters/` cannot be used as a durable backlink target.
 
 ### Canonical Reading Notes
 
-If the user provides a knowledge base path, write directly to:
+If `knowledge_root` exists:
 
 ```text
-L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
 ```
 
-If no knowledge base path is provided, write to:
+If `knowledge_root` does not exist:
 
 ```text
 outputs/reading_notes.md
 ```
 
-Rules:
-
-- The canonical reading notes path is the only final reading output for the run.
-- Do not keep a duplicate note under `raw/` or another `outputs/` location when the knowledge base path is used.
-- If a temporary note must be moved to the knowledge base, delete the temporary duplicate after moving.
-- The completion report must state the canonical reading notes path.
+This is the only final reading note for the run.
 
 ## Workflow Steps
+
+### Step 0: Resolve Knowledge Root And Canonical Output
+
+Resolve `knowledge_root` with the priority above. If no path is known, ask the user. If the user skips archival, proceed with `outputs/reading_notes.md` and report that the note was not archived to a knowledge base.
 
 ### Step 1: Store Raw Source
 
@@ -80,7 +106,7 @@ Place the original user file under:
 raw/books/{book_slug}/{book_slug}.{ext}
 ```
 
-Treat it as read-only. Do not commit real books, OCR output, private user files, or generated knowledge bases.
+Treat it as read-only. Do not commit real books, OCR output, private user files, generated knowledge bases, or generated outputs.
 
 ### Step 2: Convert To Source Markdown
 
@@ -100,25 +126,13 @@ For scanned PDFs, run OCR before conversion. OCR is detected but not automated i
 
 ### Step 3: Extract TOC To Cache
 
-Run `extract_toc.py` on the raw Markdown source:
-
 ```bash
 python3 .agents/skills/book-learning/scripts/extract_toc.py raw/books/{book_slug}/{book_slug}.md --out .cache/book-learning/{book_slug}/toc.json --min-lines 15 --max-level 3
 ```
 
-By default, TOC extraction keeps main chapters and filters out likely non-chapter headings:
-
-- TOC headings containing `目录`
-- Sidebar / box headings starting with `方框`, `Box`, or `Sidebar`
-- Heading level deeper than `--max-level 3`
-- Sections shorter than `--min-lines 15`
-- Empty or decorative headings
-
-Use `--include-sidebars` only when the user explicitly wants sidebar / box entries preserved as TOC items. If the Markdown has no headings, stop and ask for a chapter structure or create a proposed structure for user review.
+If the Markdown has no headings, stop and ask for a chapter structure or create a proposed structure for user review.
 
 ### Step 4: Split Chapters To Cache
-
-Run `split_chapters.py` only for processing:
 
 ```bash
 python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/{book_slug}/{book_slug}.md --toc .cache/book-learning/{book_slug}/toc.json --out .cache/book-learning/{book_slug}/chapters
@@ -126,34 +140,60 @@ python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/{book_s
 
 `chapters/` is cache. It is not a final product and must not become the long-term backlink target.
 
-### Step 5: Generate Reading Notes To Canonical Path
+### Step 5: Generate Reading Notes Directly To Canonical Path
 
-Read every in-scope chapter and write concise, high-density notes into the canonical reading notes path.
+Read every in-scope chapter and write concise, high-density notes into `canonical_notes_path`.
 
-Each chapter note should help a reader who has not read the book quickly understand what the book says. Focus on:
+Reading notes must include:
 
-1. Core Definition / Claim
-2. Key Framework
-3. Core Conclusion
-4. Supporting Evidence
-5. Source Backlink
+- Frontmatter with `aliases`, `tags`, `author`, `source`, `created`, and `scent`.
+- A required One-liner HTML component for `全书一句话`.
+- A directory section.
+- Markdown chapter notes for every in-scope chapter.
+- A required Core Framework Grid HTML component under `## 全书核心框架`.
+- `## 金句`.
 
-Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, or `knowledge_cards/`. Long books may be grouped by part, volume, or theme, but no in-scope chapter may be omitted.
+HTML card rules:
+
+- `全书一句话` must use the One-liner HTML component, not a callout.
+- `全书核心框架` must use the Core Framework Grid HTML component, not a plain list.
+- Process-like frameworks should use the Process Flow HTML component.
+- Contrastive ideas should use the Comparison HTML component.
+- HTML components must use inline style.
+- Do not use external CSS, JavaScript, dark card backgrounds, heavy shadows, or `border-top`.
+- Ordinary chapter notes may remain Markdown.
+
+Scent rules:
+
+- Extract 3-5 scent tags after understanding the book.
+- Scent tags must come from the book's core methods, problem types, and applicable scenes.
+- Avoid generic values such as only `book` or `reading`.
+- Write scent tags into reading notes frontmatter.
+- Mirror the same scent tags in `run_manifest.json`.
+- Report scent tags in the completion report.
+
+Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, `raw/books/{book_slug}/outputs/`, or `knowledge_cards/`.
 
 ## Reading Notes Structure
-
-Use this structure inside the canonical reading notes path:
 
 ```markdown
 ---
 aliases: [示例书]
-tags: [书籍, 分类]
+tags: [书籍, 阅读笔记]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: YYYY-MM-DD
+scent:
+  - critical-thinking
+  - structured-reading
 ---
 
-# 📚 《示例书》— 示例作者
+# 《示例书》阅读笔记
+
+<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
+  <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">全书一句话</div>
+  <div style="font-size: 20px; line-height: 1.7; color: #222; font-weight: 600;">这里写全书最核心的主张。</div>
+</div>
 
 ## 目录
 
@@ -163,34 +203,26 @@ created: YYYY-MM-DD
 
 **核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
 
-**关键框架**：
-
-- 框架 / 方法 / 分类 / 模型：说明其结构和含义。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
-
 **核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
-
-**支撑证据**：
-
-- 证据：保留最有力的数据、研究、案例或论证链。
 
 ## 全书核心框架
 
-概括全书最重要的模型、框架或方法。
+<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
+  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">全书核心框架</div>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
+      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
+      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
+      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用。</div>
+    </div>
+  </div>
+</div>
 
 ## 金句
 
 > 1. “示例金句。”（第一章）
 ```
-
-Rules:
-
-- Every in-scope chapter must appear in the canonical reading notes.
-- Remove storytelling noise and conversational filler.
-- Do not copy long passages from the book.
-- Do not fill template fields mechanically.
-- If a field is not applicable, omit it.
-- Default target length: 15-25 lines per chapter.
-- If the author's argument has an obvious dispute, boundary, or counterexample, mention it briefly after the conclusion or evidence.
 
 ## Backlink Rules / 双链回链规则
 
@@ -202,31 +234,22 @@ Recommended format:
 [[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
 ```
 
-Obsidian extensionless format is also accepted:
+Accepted formats:
 
 ```text
 [[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]
+[[/tmp/example-knowledge-root/raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
+[[~/example-knowledge-root/raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
 ```
 
 Rules:
 
-- Backlink targets must point to `raw/books/{book_slug}/{book_slug}.md` or its extensionless Obsidian form.
+- Backlink targets must point to raw source Markdown under `raw/books/`.
+- Backlink targets must include the chapter heading.
 - Do not point backlinks to `.cache/book-learning/{book_slug}/chapters/`.
 - `chapters/` is an intermediate artifact and cannot be used as the long-term source target.
-- `核心定义/主张` and `核心结论` should include backlinks at the end.
-- If `关键框架` exists, each framework item should include a backlink.
-- `支撑证据` does not require backlinks, but may include them when useful.
-- Do not add backlinks to `全书核心框架` or `金句`.
 
-## Formatting Audit
-
-Reading notes may include tables, Mermaid diagrams, Obsidian callouts, and inline HTML cards. Keep tables and Mermaid blocks unindented, with a blank line before them, and do not place them inside list items or callouts.
-
-Inline HTML cards are allowed for high-level visual sections such as `全书一句话`, process flows, comparison frameworks, and `全书核心框架`. Use inline style only and keep ordinary chapter content in Markdown when that is easier to maintain.
-
-## Audit Canonical Reading Notes
-
-Audit the canonical reading notes path:
+## Step 6: Audit Canonical Reading Notes
 
 ```bash
 python3 .agents/skills/book-learning/scripts/audit_reading_notes.py \
@@ -236,85 +259,65 @@ python3 .agents/skills/book-learning/scripts/audit_reading_notes.py \
   --out .cache/book-learning/{book_slug}/audit.json
 ```
 
-The audit checks:
+The audit checks frontmatter, chapter coverage, core claims, core conclusions, raw source backlinks, required high-level sections, and HTML / Markdown formatting warnings.
 
-1. Canonical reading notes file exists.
-2. Frontmatter includes `aliases`, `tags`, `author`, `source`, and `created`.
-3. All in-scope TOC chapter titles appear in the note.
-4. Every chapter has `核心定义/主张` or `核心主张`.
-5. Every chapter has `核心结论`.
-6. Every chapter has at least one raw source Markdown backlink.
-7. The note contains `全书核心框架`.
-8. The note contains `金句`.
-9. HTML / Markdown formatting warnings are reported as `format_issues`.
+## Step 7: Update Run Manifest And Optional Scent Index
 
-Do not proceed to completion if the audit fails.
-
-## Update Index Manifest
-
-After audit, write:
+Write:
 
 ```text
 .cache/book-learning/{book_slug}/run_manifest.json
 ```
 
-Example:
+If `knowledge_root` exists, also update the configured scent index path or:
+
+```text
+{knowledge_root}/气味索引.md
+```
+
+Append an entry:
+
+```markdown
+- [[L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记|示例书]]
+  - scent: critical-thinking, structured-reading
+  - raw: raw/books/{book_slug}/{book_slug}.md
+  - manifest: .cache/book-learning/{book_slug}/run_manifest.json
+  - status: ready_for_vector_index
+```
+
+If no `knowledge_root` exists, do not fail. Set `index_status` to `no_knowledge_root`, set `scent_index` to `null`, and report that the scent index was not updated.
+
+Run manifest example with `knowledge_root`:
 
 ```json
 {
-  "book_slug": "sample-book",
-  "raw_original": "raw/books/sample-book/sample-book.epub",
-  "raw_markdown": "raw/books/sample-book/sample-book.md",
-  "toc": ".cache/book-learning/sample-book/toc.json",
-  "chapters": ".cache/book-learning/sample-book/chapters/",
-  "audit": ".cache/book-learning/sample-book/audit.json",
-  "canonical_notes": "L1-事实与语义/02-📚 知识/sample-book-阅读笔记.md",
-  "index_status": "ready_for_index",
+  "book_slug": "示例书",
+  "raw_original": "raw/books/示例书/示例书.epub",
+  "raw_markdown": "raw/books/示例书/示例书.md",
+  "toc": ".cache/book-learning/示例书/toc.json",
+  "chapters": ".cache/book-learning/示例书/chapters/",
+  "audit": ".cache/book-learning/示例书/audit.json",
+  "canonical_notes": "{knowledge_root}/L1-事实与语义/02-📚 知识/示例书-阅读笔记.md",
   "scent": ["critical-thinking", "structured-reading"],
+  "scent_index": "{knowledge_root}/气味索引.md",
+  "index_status": "ready_for_vector_index",
   "created": "YYYY-MM-DD"
 }
 ```
 
-Rules:
+Fallback manifest fields without `knowledge_root`:
 
-- `run_manifest.json` is the bridge file for text indexes, scent routing, vector systems, and future automation.
-- `book-learning-skill` does not require a vector database.
-- If a vector search or embedding skill exists, it can read `run_manifest.json` and index `canonical_notes`.
-- If no vector system exists, update the text scent index or tell the user that vector indexing is a follow-up.
+```json
+{
+  "canonical_notes": "outputs/reading_notes.md",
+  "scent_index": null,
+  "index_status": "no_knowledge_root"
+}
+```
 
-## Scent Index And Vector Index
+Text scent indexing is the baseline capability. Vector indexing is optional enhancement handled by an external skill or user system. `book-learning-skill` outputs index-ready metadata but does not require vector search or embeddings.
 
-Text scent indexing is the baseline capability. Vector indexing is optional enhancement.
-
-Rules:
-
-- The skill outputs index-ready metadata through `run_manifest.json`.
-- Scent values are routing hints, not hard dependencies.
-- Vector search / embedding is handled by an external skill or user system.
-- Do not make vector search a requirement for learning a book.
-- The completion report should state whether the text index was updated, the `run_manifest.json` path, and whether vector indexing is still needed.
-
-## Cognitive Toolbox Stage
-
-After the canonical reading notes are complete and audited, the Agent may create a cognitive toolbox from the book only when useful or explicitly requested.
-
-This optional stage can include:
-
-- 3-5 method cards
-- Scene trigger index
-- Optional scent vectors
-- Invocation guide
-
-Rules:
-
-- Do not create method cards before the canonical reading notes are complete.
-- Method cards must be actionable and must not replace the reading notes.
-- Scent vectors are optional routing hints, not hard dependencies.
-- Do not restore default knowledge-card generation or per-chapter note files.
-
-## Completion Report
-
-Use this concise report:
+## Step 8: Completion Report
 
 ```markdown
 ### 学习完成报告
@@ -326,20 +329,18 @@ Use this concise report:
   2. xxx
   3. xxx
 - **文件**：
-  - 原始文件：`raw/books/示例书/示例书.epub`
-  - 原文 Markdown：`raw/books/示例书/示例书.md`
-  - 处理缓存：`.cache/book-learning/示例书/`
+  - 原文：`raw/books/示例书/示例书.md`
   - 笔记：`{canonical_notes_path}`
+  - TOC：`.cache/book-learning/示例书/toc.json`
+  - 审计：`.cache/book-learning/示例书/audit.json`
   - Manifest：`.cache/book-learning/示例书/run_manifest.json`
+- **Scent Tags**：critical-thinking, structured-reading
+- **气味索引**：已更新 / 未更新（原因）
+- **向量索引**：ready_for_vector_index / no_knowledge_root / not_configured
 - **审计**：PASS / FAIL + 原因
-- **索引**：文本索引已更新 / 未更新；向量索引已执行 / 需要后续执行
 ```
 
-If only part of the book was studied, explicitly write:
-
-```text
-本次只覆盖第 X 章至第 Y 章，未覆盖全书。
-```
+Do not report per-chapter notes as final artifacts. Do not report knowledge card counts.
 
 ## Failure Handling
 
@@ -352,6 +353,6 @@ If only part of the book was studied, explicitly write:
 
 - Do not confuse chapter split files with final notes.
 - Do not mark a chapter covered only because its heading exists.
-- Do not hide definitions, frameworks, conclusions, or evidence behind generic commentary.
 - Do not omit raw source Markdown backlinks.
 - Do not keep duplicate `reading_notes.md` files across `outputs/` and a knowledge base.
+- Do not hard-code personal knowledge base paths.

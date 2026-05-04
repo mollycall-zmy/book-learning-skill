@@ -11,6 +11,8 @@ The Agent should not repeat the method card. It should transform the method card
 - Text scent indexing is the baseline capability.
 - Vector indexing is optional enhancement.
 - `.cache/book-learning/{book_slug}/run_manifest.json` is the bridge file for indexers and routing systems.
+- If `knowledge_root` exists, update the configured scent index path or `{knowledge_root}/气味索引.md`.
+- If no `knowledge_root` exists, set `index_status` to `no_knowledge_root` and report that scent indexing was skipped.
 - External vector search / embedding skills may read `run_manifest.json` and index the canonical reading notes.
 - If no vector system exists, update the text scent index or tell the user vector indexing can be done later.
 

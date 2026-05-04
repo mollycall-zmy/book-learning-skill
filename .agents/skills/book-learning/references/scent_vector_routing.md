@@ -48,9 +48,15 @@ scent:
 ↓
 转化为当前任务的分析动作
 
+## Reading Notes Rules
+
+- Each canonical reading note must include 3-5 useful `scent` values in frontmatter.
+- The same `scent` values must be mirrored in `.cache/book-learning/{book_slug}/run_manifest.json`.
+- If `knowledge_root` exists, update the configured scent index path or `{knowledge_root}/气味索引.md`.
+
 ## Rules
 
-- Scent vector is optional, not a hard dependency.
+- Scent vector routing is optional, not a hard dependency.
 - Open-source usage must not require a vector system.
 - Support keywords, scene indexes, frontmatter tags, vector similarity, and scent vectors.
 - Scent is a routing clue, not the final judgment.
