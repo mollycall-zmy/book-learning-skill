@@ -22,7 +22,7 @@ class ExtractTocTest(unittest.TestCase):
 
         self.assertTrue(toc["source"].endswith("examples/sample_book.md"))
         self.assertEqual(len(toc["chapters"]), 12)
-        self.assertEqual(toc["chapters"][0]["title"], "The Orchard Of Useful Questions")
+        self.assertEqual(toc["chapters"][0]["title"], "示例书")
         self.assertEqual(toc["chapters"][0]["level"], 1)
         self.assertEqual(toc["chapters"][0]["start_line"], 1)
         self.assertLess(toc["chapters"][0]["end_line"], toc["chapters"][1]["start_line"])

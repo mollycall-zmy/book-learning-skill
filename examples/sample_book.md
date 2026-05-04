@@ -1,45 +1,45 @@
-# The Orchard Of Useful Questions
+# 示例书
 
-## Preface
+## 前言
 
-This synthetic test book describes a fictional learning garden. It is original test content for this repository.
+这是一本用于测试的自造示例书。它只包含示例内容，不对应真实书籍、真实作者或真实章节。
 
-## Chapter 1: Seeds
+## 第一章 示例章节
 
-Questions begin as seeds. A careful learner labels each seed before planting it.
+第一章正文说明一个示例问题如何被提出、拆解和记录。
 
-### Choosing A Plot
+### 第一节 示例小节
 
-A question grows better when its boundary is visible.
+示例问题需要先确认边界，再进入分析。
 
-### First Watering
+### 第二节 示例小节
 
-The first answer should be small enough to revise.
+示例答案应该保留来源、假设和可复查的线索。
 
-## Chapter 2: Paths
+## 第二章 示例章节
 
-Knowledge becomes useful when paths connect observations to decisions.
+第二章正文说明如何把示例问题转化为结构化笔记。
 
-### Map Before Walking
+### 第三节 示例小节
 
-A map is not the walk, but it prevents avoidable circles.
+结构化笔记应该区分定义、框架、结论和证据。
 
-### Marking Turns
+### 第四节 示例小节
 
-Every turn should leave a marker for the next reader.
+可追溯笔记应该保留回链，方便之后审计。
 
-## Chapter 3: Harvest
+## 第三章 示例章节
 
-A harvest is not a pile. It is a set of sorted, reusable results.
+第三章正文说明如何把示例笔记接入后续知识调用。
 
-### Sorting
+### 第五节 示例小节
 
-Separate examples, principles, warnings, and open questions.
+可调用知识需要明确适用场景和不适用场景。
 
-### Saving Seeds
+### 第六节 示例小节
 
-The best output creates better questions for the next season.
+最终产物应该只有一份 canonical reading notes。
 
-## Appendix: Tools
+## 附录 示例章节
 
-The fictional garden uses notebooks, labels, and patient review.
+附录只提供测试用的补充说明。

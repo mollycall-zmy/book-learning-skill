@@ -15,7 +15,9 @@ Chinese trigger examples: `喂你一本书`, `学习这本书`, `帮我逐章消
 
 Follow this order strictly:
 
-0. Resolve `knowledge_root` / `memory_palace_root` and the canonical reading notes path.
+0. Resolve `knowledge_root` / `memory_palace_root`.
+0.5. Audit the knowledge directory structure and resolve `{matched_knowledge_subdir}` before deciding the canonical reading notes path.
+0.6. Route the reading request to a `reading_mode`.
 1. Store original user files under `raw/books/{book_slug}/` and do not modify them.
 2. Convert the source to `raw/books/{book_slug}/{book_slug}.md`.
 3. Extract a table of contents to `.cache/book-learning/{book_slug}/toc.json`.
@@ -34,7 +36,36 @@ Resolve `knowledge_root` in this priority order:
 5. If none exists, ask: "是否要归档到你的知识库？请提供 knowledge_root 路径。若不提供，将只输出到 outputs/reading_notes.md。"
 6. If the user skips archival, use `outputs/reading_notes.md`.
 
-If `knowledge_root` exists, canonical notes path is `{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`. Otherwise it is `outputs/reading_notes.md`. Never hard-code a personal knowledge base path.
+If `knowledge_root` exists, audit `{knowledge_root}/L1-事实与语义/02-📚 知识/` and choose `{matched_knowledge_subdir}` from existing direct subdirectories. Canonical notes path is `{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md`. If no confident match exists, ask: "我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？" If the user allows root fallback, use `{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`; otherwise use `outputs/reading_notes.md`. Never hard-code a personal knowledge base path.
+
+Knowledge subdir matching priority: user-specified category > `preferred_category` in config > Agent context > semantic match from book topic, user intent, reading mode, scent tags, and existing subdir names > ask user. Do not set a global default subdir.
+
+## Reading Mode Selection
+
+Before writing `reading_notes.md`, choose a reading mode.
+
+If the user specifies a mode, follow it. If not, infer the mode from the book type, table of contents, user goal, and scent tags. If confidence is low, ask:
+
+```text
+你希望用哪种模式消化这本书？
+0. 教材式干货提炼
+1. SOP / 执行手册
+2. 场景映射 / 生产力转化
+3. 认知刷新 / 反常识洞察
+4. 沟通博弈 / 决策推演
+```
+
+Default mode is `mode-0-distillation`.
+
+Supported modes:
+
+- `mode-0-distillation`: 教材式干货提炼，适合理论书、方法论书、概念密集型书。
+- `mode-1-sop`: SOP / 执行手册，适合实操类、技能训练、工作流程。
+- `mode-2-scene-mapping`: 场景映射 / 生产力转化，适合商业、管理、品牌、决策、咨询。
+- `mode-3-cognitive-refresh`: 认知刷新 / 反常识洞察，适合心理学、社会科学、认知升级。
+- `mode-4-communication-game`: 沟通博弈 / 决策推演，适合沟通、谈判、提问、说服、冲突处理。
+
+Write `reading_mode: mode-0-distillation` or the selected mode into frontmatter and `run_manifest.json`. The audit must apply the matching mode required fields.
 
 Directory responsibility:
 
@@ -78,7 +109,7 @@ Use `references/html_card_spec.md` and `assets/chapter_note_template.md` for the
 
 After reading notes are complete, extract 3-5 useful `scent` tags from the book's core methods, problem types, and applicable scenes. Write them into reading notes frontmatter, mirror them in `run_manifest.json`, and include them in the completion report.
 
-Do not finish until all in-scope chapters are represented in the canonical reading notes, scent frontmatter exists, raw source Markdown backlinks pass audit, and the reading-note audit passes. For Chinese requests, report the output paths and learning summary in Chinese.
+Do not finish until all in-scope chapters are represented in the canonical reading notes, `reading_mode` and `scent` frontmatter exist, raw source Markdown backlinks pass audit, mode-specific audit rules pass, and the reading-note audit passes. For Chinese requests, report the output paths and learning summary in Chinese.
 
 Backlink rule: chapter backlinks must point to the converted raw source Markdown, using `[[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]` or the Obsidian extensionless form `[[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]`. Do not backlink to `.cache/book-learning/{book_slug}/chapters/`.
 
@@ -112,6 +143,7 @@ Use bundled resources:
 - Read `references/workflow.md` for the detailed end-to-end workflow and failure handling.
 - Read `references/output_schema.md` before writing TOC files, reading notes, or audit reports.
 - Read `references/html_card_spec.md` before writing reading notes. High-level HTML cards are mandatory.
+- Read `references/reading_modes.md` before choosing the reading mode.
 - Read `references/method_card_design.md` before extracting method cards.
 - Read `references/scene_trigger_index.md` when building or updating scene triggers.
 - Read `references/scent_vector_routing.md` when assigning required reading-note scent values.
@@ -120,6 +152,7 @@ Use bundled resources:
 - Use `scripts/convert_to_md.py` for PDF, EPUB, DOCX, and HTML conversion.
 - Use `scripts/extract_toc.py`, `scripts/split_chapters.py`, and `scripts/audit_reading_notes.py` for deterministic structure handling.
 - Use `assets/chapter_note_template.md` as the compact per-section format inside the canonical reading notes.
+- Use `assets/reading_mode_templates.md` for mode-specific chapter structures.
 - Use `assets/method_card_template.md`, `assets/scene_index_template.md`, `assets/scent_vector_template.md`, and `assets/invocation_report_template.md` for second-stage artifacts.
 
 Do not commit real books, PDFs, EPUBs, OCR output, private files, or generated knowledge bases.

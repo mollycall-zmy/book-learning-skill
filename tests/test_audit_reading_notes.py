@@ -35,6 +35,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -149,6 +150,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -217,6 +219,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -290,6 +293,123 @@ scent:
             self.assertFalse(report["passed"])
             self.assertFalse(report["frontmatter_passed"])
             self.assertIn("scent", report["missing_frontmatter_fields"])
+
+    def test_missing_reading_mode_defaults_to_mode_0(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            write_toc(toc_path)
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(complete_notes().replace("reading_mode: mode-0-distillation\n", ""), encoding="utf-8")
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertTrue(report["passed"])
+            self.assertEqual(report["reading_mode"], "mode-0-distillation")
+
+    def test_frontmatter_reading_mode_is_reported(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            write_toc(toc_path)
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(complete_notes().replace("reading_mode: mode-0-distillation", "reading_mode: mode-1-sop"), encoding="utf-8")
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertEqual(report["reading_mode"], "mode-1-sop")
+
+    def test_mode_1_sop_passes_without_core_claim(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            write_toc(toc_path)
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(
+                """---
+aliases: [示例书]
+tags: [书籍]
+author: 示例作者
+source: "[[raw/books/示例书/示例书.md]]"
+created: 2026-01-01
+reading_mode: mode-1-sop
+scent:
+  - structured-reading
+  - decision-making
+---
+
+# 📚 《示例书》— 示例作者
+
+## 第一章 示例章节
+
+**适用场景**：这个方法用于处理示例任务。
+
+**执行步骤**：
+
+1. Step 1
+2. Step 2
+3. Step 3
+
+**检查清单**：
+
+- [ ] 检查项 1
+- [ ] 检查项 2
+
+**来源回链**：[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
+
+## 第二章 示例章节
+
+**适用场景**：这个方法用于处理另一个示例任务。
+
+**执行步骤**：
+
+1. Step 1
+2. Step 2
+3. Step 3
+
+**检查清单**：
+
+- [ ] 检查项 1
+- [ ] 检查项 2
+
+**来源回链**：[[raw/books/示例书/示例书.md#第二章 示例章节|🔗]]
+
+## 全书核心框架
+
+1. 框架一
+
+## 金句
+
+> “示例金句。”（第一章）
+""",
+                encoding="utf-8",
+            )
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertTrue(report["passed"])
+            self.assertEqual(report["reading_mode"], "mode-1-sop")
+            self.assertTrue(report["mode_required_fields_passed"])
+            self.assertTrue(report["core_claims_passed"])
+
+    def test_mode_1_sop_fails_without_checklist(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            toc_path = tmp_path / "toc.json"
+            write_toc(toc_path)
+            notes = complete_notes().replace("reading_mode: mode-0-distillation", "reading_mode: mode-1-sop")
+            notes = notes.replace("**关键框架**", "**执行步骤**")
+            notes_path = tmp_path / "reading_notes.md"
+            notes_path.write_text(notes, encoding="utf-8")
+
+            report = module.audit_reading_notes(toc_path, notes_path)
+
+            self.assertFalse(report["mode_required_fields_passed"])
+            self.assertIn("检查清单", report["chapters_missing_mode_required_fields"][0]["missing_fields"])
 
     def test_missing_chapter_fails(self):
         module = load_module()
@@ -413,6 +533,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -464,6 +585,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -516,6 +638,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[/tmp/example-knowledge-root/raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -568,6 +691,7 @@ tags: [书籍]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: 2026-01-01
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading

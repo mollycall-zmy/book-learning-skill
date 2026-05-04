@@ -18,6 +18,13 @@ CORE_CLAIM_MARKERS = ("核心定义/主张", "核心主张")
 CORE_CONCLUSION_MARKERS = ("核心结论",)
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
+MODE_REQUIRED_FIELDS = {
+    "mode-0-distillation": ("核心定义/主张", "核心结论", "source_backlink"),
+    "mode-1-sop": ("执行步骤", "检查清单", "source_backlink"),
+    "mode-2-scene-mapping": ("适用任务", "场景触发词", "使用动作", "source_backlink"),
+    "mode-3-cognitive-refresh": ("旧认知", "新认知", "关键机制", "source_backlink"),
+    "mode-4-communication-game": ("局面定义", "参与方", "关键变量", "source_backlink"),
+}
 
 
 def extract_frontmatter(content: str) -> dict[str, str]:
@@ -124,6 +131,16 @@ def raw_backlinks_for_title(text: str, title: str, normalized_is_ambiguous: bool
         for link in raw_source_wikilinks(text)
         if heading_matches_title(link["heading"], title, normalized_is_ambiguous)
     ]
+
+
+def section_has_required_field(section: str, field: str, title: str, normalized_is_ambiguous: bool = False) -> bool:
+    if field == "source_backlink":
+        return bool(raw_backlinks_for_title(section, title, normalized_is_ambiguous))
+    if field == "核心定义/主张":
+        return any(marker in section for marker in CORE_CLAIM_MARKERS)
+    if field == "核心结论":
+        return any(marker in section for marker in CORE_CONCLUSION_MARKERS)
+    return field in section
 
 
 def is_table_row(line: str) -> bool:
@@ -275,10 +292,14 @@ def audit_reading_notes(
     missing_core_claim = []
     missing_core_conclusion = []
     missing_backlinks = []
+    missing_mode_required_fields = []
     coverage_details = []
+    reading_mode = frontmatter.get("reading_mode", "mode-0-distillation").strip().strip('"')
+    required_mode_fields = MODE_REQUIRED_FIELDS.get(reading_mode, MODE_REQUIRED_FIELDS["mode-0-distillation"])
 
     for entry in chapters:
         title = entry["title"]
+        normalized_is_ambiguous = normalize_title(title) in ambiguous_normalized_titles
         coverage = find_coverage_for_toc_item(entry, sections, ambiguous_normalized_titles)
         coverage_details.append(
             {
@@ -295,17 +316,26 @@ def audit_reading_notes(
             missing_core_claim.append(entry["id"])
             missing_core_conclusion.append(entry["id"])
             missing_backlinks.append(entry["id"])
+            missing_mode_required_fields.append({"id": entry["id"], "missing_fields": list(required_mode_fields)})
             continue
         if not any(marker in section for marker in CORE_CLAIM_MARKERS):
             missing_core_claim.append(entry["id"])
         if not any(marker in section for marker in CORE_CONCLUSION_MARKERS):
             missing_core_conclusion.append(entry["id"])
-        if not raw_backlinks_for_title(section, title, normalize_title(title) in ambiguous_normalized_titles):
+        if not raw_backlinks_for_title(section, title, normalized_is_ambiguous):
             missing_backlinks.append(entry["id"])
+        missing_fields_for_section = [
+            field
+            for field in required_mode_fields
+            if not section_has_required_field(section, field, title, normalized_is_ambiguous)
+        ]
+        if missing_fields_for_section:
+            missing_mode_required_fields.append({"id": entry["id"], "missing_fields": missing_fields_for_section})
 
     heading_titles = {section["heading"] for section in sections}
     has_core_framework = "全书核心框架" in heading_titles
     has_quotes = "金句" in heading_titles
+    mode_0 = reading_mode == "mode-0-distillation"
     format_issues = check_formatting(content)
     report = {
         "reading_notes_exists": True,
@@ -316,14 +346,18 @@ def audit_reading_notes(
         "missing_frontmatter_fields": missing_fields,
         "chapter_coverage_passed": not missing_chapters,
         "missing_chapters": missing_chapters,
-        "core_claims_passed": not missing_core_claim,
+        "core_claims_passed": (not missing_core_claim) if mode_0 else True,
         "chapters_missing_core_claim": missing_core_claim,
-        "core_conclusions_passed": not missing_core_conclusion,
+        "core_conclusions_passed": (not missing_core_conclusion) if mode_0 else True,
         "chapters_missing_core_conclusion": missing_core_conclusion,
         "backlinks_passed": not missing_backlinks,
         "chapters_missing_backlinks": missing_backlinks,
         "format_issues": format_issues,
         "coverage_details": coverage_details,
+        "reading_mode": reading_mode,
+        "mode_required_fields": list(required_mode_fields),
+        "mode_required_fields_passed": not missing_mode_required_fields,
+        "chapters_missing_mode_required_fields": missing_mode_required_fields,
         "has_core_framework": has_core_framework,
         "has_quotes": has_quotes,
     }
@@ -335,6 +369,7 @@ def audit_reading_notes(
             report["core_claims_passed"],
             report["core_conclusions_passed"],
             report["backlinks_passed"],
+            report["mode_required_fields_passed"],
             report["has_core_framework"],
             report["has_quotes"],
         ]

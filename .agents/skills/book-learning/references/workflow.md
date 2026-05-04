@@ -28,7 +28,7 @@ Resolve `knowledge_root` in this priority order:
 Canonical notes path:
 
 ```text
-{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md
 outputs/reading_notes.md
 ```
 
@@ -39,6 +39,7 @@ Rules:
 - Do not hard-code personal local paths in code, docs, templates, tests, or output.
 - If a temporary note must be moved to `knowledge_root`, delete the temporary duplicate after moving.
 - `run_manifest.json`, the scent index, and the completion report must point to the final canonical notes path.
+- `{matched_knowledge_subdir}` is not a fixed value. It must come from directory audit, configuration, Agent context, or user confirmation.
 
 ## Directory Responsibilities
 
@@ -81,7 +82,7 @@ Rules:
 If `knowledge_root` exists:
 
 ```text
-{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md
 ```
 
 If `knowledge_root` does not exist:
@@ -97,6 +98,83 @@ This is the only final reading note for the run.
 ### Step 0: Resolve Knowledge Root And Canonical Output
 
 Resolve `knowledge_root` with the priority above. If no path is known, ask the user. If the user skips archival, proceed with `outputs/reading_notes.md` and report that the note was not archived to a knowledge base.
+
+### Step 0.5: Audit Knowledge Directory Structure
+
+If `knowledge_root` exists, inspect:
+
+```text
+{knowledge_root}/L1-事实与语义/02-📚 知识/
+```
+
+List direct subdirectories only. Select `{matched_knowledge_subdir}` using:
+
+- user-specified category
+- `preferred_category` from config
+- Agent context
+- book topic
+- user intent
+- selected reading mode
+- scent tags
+- semantic fit with existing subdir names
+
+Matching output:
+
+```json
+{
+  "matched_knowledge_subdir": "{matched_knowledge_subdir}",
+  "confidence": "high",
+  "reason": "用户指定 / 配置命中 / 语义匹配 / 用户确认"
+}
+```
+
+Matching strategy:
+
+- User-specified category wins.
+- Configured `preferred_category` wins when the directory exists.
+- Agent context can provide a category if it is explicit.
+- Semantic matching should consider topic, user intent, reading mode, scent tags, and subdir names together.
+- Do not rely on a single keyword.
+- If a book is clearly about learning methods, thinking methods, or cognitive tools, prefer existing subdirs whose names contain words such as `学习`, `认知`, `思维`, or `方法`.
+- If a book is industry, case, business, or brand oriented, prefer matching industry / case / business subdirs.
+- If confidence is low, ask: `我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？`
+- If the user skips subdir selection and allows root fallback, use `{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`.
+- If the user does not allow root fallback, use `outputs/reading_notes.md`.
+
+Record these fields in `run_manifest.json`: `knowledge_root`, `knowledge_category_root`, `matched_knowledge_subdir`, `category_match_reason`, and `canonical_notes`.
+
+### Step 0.6: Route Reading Mode
+
+Select a `reading_mode` before writing notes.
+
+If the user specifies a mode, follow it. If not, infer from book type, table of contents, user goal, and scent tags. If confidence is low, ask the user to choose from the five modes. Default mode is `mode-0-distillation`.
+
+Inputs:
+
+- user intent
+- book type
+- book topic
+- requested output style
+- knowledge destination
+- expected future use
+
+Supported modes:
+
+| Mode | Use When | Audit Required Fields | Preferred HTML |
+| --- | --- | --- | --- |
+| `mode-0-distillation` | 教材式干货提炼；理论书、方法论书、概念密集型书 | `核心定义/主张`, `核心结论`, `source_backlink` | Core Framework Grid |
+| `mode-1-sop` | SOP / 执行手册；实操类书籍、技能训练、工作流程 | `执行步骤`, `检查清单`, `source_backlink` | Process Flow |
+| `mode-2-scene-mapping` | 场景映射 / 生产力转化；商业、管理、品牌、决策、咨询 | `适用任务`, `场景触发词`, `使用动作`, `source_backlink` | Comparison + Core Framework Grid |
+| `mode-3-cognitive-refresh` | 认知刷新 / 反常识洞察；心理学、社会科学、认知升级 | `旧认知`, `新认知`, `关键机制`, `source_backlink` | Comparison |
+| `mode-4-communication-game` | 沟通博弈 / 决策推演；沟通、谈判、提问、说服、冲突处理 | `局面定义`, `参与方`, `关键变量`, `source_backlink` | Process Flow + Comparison |
+
+Write the selected mode to frontmatter:
+
+```yaml
+reading_mode: mode-0-distillation
+```
+
+Also write it to `run_manifest.json`. Mode-specific chapter templates live in `assets/reading_mode_templates.md`.
 
 ### Step 1: Store Raw Source
 
@@ -146,12 +224,13 @@ Read every in-scope chapter and write concise, high-density notes into `canonica
 
 Reading notes must include:
 
-- Frontmatter with `aliases`, `tags`, `author`, `source`, `created`, and `scent`.
+- Frontmatter with `aliases`, `tags`, `author`, `source`, `created`, `reading_mode`, and `scent`.
 - A required One-liner HTML component for `全书一句话`.
 - A directory section.
 - Markdown chapter notes for every in-scope chapter.
 - A required Core Framework Grid HTML component under `## 全书核心框架`.
 - `## 金句`.
+- Mode-specific sections required by the selected `reading_mode`.
 
 HTML card rules:
 
@@ -183,6 +262,7 @@ tags: [书籍, 阅读笔记]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: YYYY-MM-DD
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -297,7 +377,12 @@ Run manifest example with `knowledge_root`:
   "toc": ".cache/book-learning/示例书/toc.json",
   "chapters": ".cache/book-learning/示例书/chapters/",
   "audit": ".cache/book-learning/示例书/audit.json",
-  "canonical_notes": "{knowledge_root}/L1-事实与语义/02-📚 知识/示例书-阅读笔记.md",
+  "knowledge_root": "{knowledge_root}",
+  "knowledge_category_root": "{knowledge_root}/L1-事实与语义/02-📚 知识",
+  "matched_knowledge_subdir": "{matched_knowledge_subdir}",
+  "category_match_reason": "用户确认",
+  "canonical_notes": "{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/示例书-阅读笔记.md",
+  "reading_mode": "mode-0-distillation",
   "scent": ["critical-thinking", "structured-reading"],
   "scent_index": "{knowledge_root}/气味索引.md",
   "index_status": "ready_for_vector_index",
@@ -310,6 +395,7 @@ Fallback manifest fields without `knowledge_root`:
 ```json
 {
   "canonical_notes": "outputs/reading_notes.md",
+  "reading_mode": "mode-0-distillation",
   "scent_index": null,
   "index_status": "no_knowledge_root"
 }
@@ -331,10 +417,13 @@ Text scent indexing is the baseline capability. Vector indexing is optional enha
 - **文件**：
   - 原文：`raw/books/示例书/示例书.md`
   - 笔记：`{canonical_notes_path}`
+  - 知识分类：`{matched_knowledge_subdir}` / 未归档
   - TOC：`.cache/book-learning/示例书/toc.json`
   - 审计：`.cache/book-learning/示例书/audit.json`
   - Manifest：`.cache/book-learning/示例书/run_manifest.json`
 - **Scent Tags**：critical-thinking, structured-reading
+- **笔记模式**：mode-0-distillation / 教材式干货提炼
+- **目录匹配依据**：根据 reading_mode / scent / 用户指定 / 子目录名称匹配
 - **气味索引**：已更新 / 未更新（原因）
 - **向量索引**：ready_for_vector_index / no_knowledge_root / not_configured
 - **审计**：PASS / FAIL + 原因

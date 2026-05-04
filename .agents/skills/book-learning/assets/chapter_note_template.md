@@ -11,6 +11,7 @@ Required high-level components:
 - Process-like frameworks should use Component 2.
 - Contrastive ideas should use Component 4.
 - Reading notes frontmatter must include 3-5 useful `scent` tags.
+- Mode-specific chapter structures live in `assets/reading_mode_templates.md`.
 
 ## Card Differentiation Principle
 

@@ -104,6 +104,8 @@ User → Agent → book-learning skill
 - [x] 生成单一 canonical reading notes
 - [x] 审计阅读笔记是否覆盖章节、核心字段和双链回链
 - [x] 支持 `knowledge_root` / memory palace 归档路径抽象
+- [x] 审计知识目录直接子目录并写入 `{matched_knowledge_subdir}`
+- [x] 支持 `reading_mode` 路由和模式化审计
 - [x] 要求高层视觉区使用 HTML 卡片组件
 - [x] 将 scent tags 写入笔记 frontmatter 和 run manifest
 - [x] 提供阅读笔记章节模板
@@ -154,9 +156,11 @@ User → Agent → book-learning skill
 `canonical_notes_path` 的规则：
 
 ```text
-有 knowledge_root：{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+有 knowledge_root：{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md
 无 knowledge_root：outputs/reading_notes.md
 ```
+
+`{matched_knowledge_subdir}` 必须来自知识目录审计、配置、Agent 上下文或用户确认；它不是固定默认值。如果知识目录下有多个子目录且无法高置信匹配，Agent 必须询问：“我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？”
 
 不会保留两份 `reading_notes.md`。如果有 `knowledge_root`，reading notes 直接输出到知识库；`raw` 不保存最终笔记；`chapters/` 是 cache，不是最终产物。开源仓库不会硬编码个人知识库路径。
 
@@ -165,11 +169,22 @@ User → Agent → book-learning skill
 ### Layer 1: Reading Notes
 
 - 默认输出：`outputs/reading_notes.md`，仅在无 `knowledge_root` 时使用
-- 知识库输出：`{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`
+- 知识库输出：`{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md`
 - 保留原文结构、核心定义、关键框架、核心结论、支撑证据和原文回链
+- frontmatter 必须包含 `reading_mode`
 - `全书一句话` 和 `全书核心框架` 必须使用内联 HTML 卡片组件
 - frontmatter 必须包含 3-5 个有用的 `scent` tags
 - 这是基础工作流，不依赖第二阶段
+
+Reading Modes:
+
+- Mode 0：`mode-0-distillation`，教材式干货提炼
+- Mode 1：`mode-1-sop`，SOP / 执行手册
+- Mode 2：`mode-2-scene-mapping`，场景映射 / 生产力转化
+- Mode 3：`mode-3-cognitive-refresh`，认知刷新 / 反常识洞察
+- Mode 4：`mode-4-communication-game`，沟通博弈 / 决策推演
+
+如果用户没有指定模式，默认使用 Mode 0；如果 Agent 低置信度，会先询问用户。
 
 ### Layer 2: Method Cards
 

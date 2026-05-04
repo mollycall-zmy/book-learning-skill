@@ -14,11 +14,11 @@
 Canonical notes path:
 
 ```text
-{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md
+{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md
 outputs/reading_notes.md
 ```
 
-Only one canonical notes path may exist per run.
+Only one canonical notes path may exist per run. `{matched_knowledge_subdir}` is not fixed. It must be obtained through knowledge directory audit, user configuration, Agent context, or user confirmation. If `knowledge_root` exists but subdir selection is uncertain, the Agent must ask the user. If the user allows root fallback, use `{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`; otherwise fall back to `outputs/reading_notes.md`.
 
 ## Output Map
 
@@ -105,6 +105,12 @@ Canonical reading notes path:
 {canonical_notes_path}
 ```
 
+With `knowledge_root`, this usually expands to:
+
+```text
+{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md
+```
+
 Required high-level structure:
 
 ```markdown
@@ -114,6 +120,7 @@ tags: [书籍, 阅读笔记]
 author: 示例作者
 source: "[[raw/books/示例书/示例书.md]]"
 created: YYYY-MM-DD
+reading_mode: mode-0-distillation
 scent:
   - critical-thinking
   - structured-reading
@@ -157,7 +164,7 @@ scent:
 
 Required rules:
 
-- Frontmatter must include `aliases`, `tags`, `author`, `source`, `created`, and `scent`.
+- Frontmatter must include `aliases`, `tags`, `author`, `source`, `created`, `reading_mode`, and `scent`.
 - Each book must have 3-5 useful scent tags when possible.
 - Scent tags must come from the book's core methods, problem types, and applicable scenes.
 - One-liner HTML component is required.
@@ -168,6 +175,26 @@ Required rules:
 - Every chapter must include `核心定义/主张` or `核心主张`.
 - Every chapter must include `核心结论`.
 - Every chapter must include at least one backlink to the raw source Markdown.
+
+## Reading Modes
+
+`reading_mode` controls template and audit rules.
+
+| Mode | Template Focus | Required Fields |
+| --- | --- | --- |
+| `mode-0-distillation` | 教材式干货提炼 | `核心定义/主张`, `核心结论`, `source_backlink` |
+| `mode-1-sop` | SOP / 执行手册 | `执行步骤`, `检查清单`, `source_backlink` |
+| `mode-2-scene-mapping` | 场景映射 / 生产力转化 | `适用任务`, `场景触发词`, `使用动作`, `source_backlink` |
+| `mode-3-cognitive-refresh` | 认知刷新 / 反常识洞察 | `旧认知`, `新认知`, `关键机制`, `source_backlink` |
+| `mode-4-communication-game` | 沟通博弈 / 决策推演 | `局面定义`, `参与方`, `关键变量`, `source_backlink` |
+
+Audit rules:
+
+- All modes require frontmatter, chapter coverage, raw source backlinks, `全书核心框架`, and `金句`.
+- Mode 0 requires `核心定义/主张` and `核心结论`.
+- Other modes use their own required fields and do not require Mode 0 fields.
+- Do not generate knowledge cards automatically in any mode.
+- Do not create per-chapter notes as final artifacts in any mode.
 
 HTML rules:
 
@@ -228,6 +255,10 @@ Schema:
   "chapters_missing_backlinks": [],
   "format_issues": [],
   "coverage_details": [],
+  "reading_mode": "mode-0-distillation",
+  "mode_required_fields": ["核心定义/主张", "核心结论", "source_backlink"],
+  "mode_required_fields_passed": true,
+  "chapters_missing_mode_required_fields": [],
   "has_core_framework": true,
   "has_quotes": true,
   "passed": true
@@ -252,7 +283,12 @@ With `knowledge_root`:
   "toc": ".cache/book-learning/示例书/toc.json",
   "chapters": ".cache/book-learning/示例书/chapters/",
   "audit": ".cache/book-learning/示例书/audit.json",
-  "canonical_notes": "{knowledge_root}/L1-事实与语义/02-📚 知识/示例书-阅读笔记.md",
+  "knowledge_root": "{knowledge_root}",
+  "knowledge_category_root": "{knowledge_root}/L1-事实与语义/02-📚 知识",
+  "matched_knowledge_subdir": "{matched_knowledge_subdir}",
+  "category_match_reason": "用户确认",
+  "canonical_notes": "{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/示例书-阅读笔记.md",
+  "reading_mode": "mode-0-distillation",
   "scent": ["critical-thinking", "structured-reading"],
   "scent_index": "{knowledge_root}/气味索引.md",
   "index_status": "ready_for_vector_index",
@@ -267,6 +303,7 @@ Without `knowledge_root`:
   "book_slug": "示例书",
   "raw_markdown": "raw/books/示例书/示例书.md",
   "canonical_notes": "outputs/reading_notes.md",
+  "reading_mode": "mode-0-distillation",
   "scent": ["critical-thinking", "structured-reading"],
   "scent_index": null,
   "index_status": "no_knowledge_root",

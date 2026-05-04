@@ -33,9 +33,9 @@ class SplitChaptersTest(unittest.TestCase):
             written = split_chapters.split_chapters(SAMPLE, toc_path, out_dir)
 
             self.assertEqual(len(written), len(toc["chapters"]))
-            first = out_dir / "001-the-orchard-of-useful-questions.md"
+            first = out_dir / "001-示例书.md"
             self.assertTrue(first.exists())
-            self.assertTrue(first.read_text(encoding="utf-8").startswith("# The Orchard Of Useful Questions"))
+            self.assertTrue(first.read_text(encoding="utf-8").startswith("# 示例书"))
 
 
 if __name__ == "__main__":
