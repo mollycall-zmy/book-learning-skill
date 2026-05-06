@@ -13,18 +13,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from extract_toc import main_chapters_from_toc  # noqa: E402
 
 
-REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created", "scent")
+REQUIRED_FRONTMATTER_FIELDS = ("aliases", "tags", "author", "source", "created")
 CORE_CLAIM_MARKERS = ("核心定义/主张", "核心主张")
 CORE_CONCLUSION_MARKERS = ("核心结论",)
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
-MODE_REQUIRED_FIELDS = {
+LEGACY_MODE_SUGGESTED_FIELDS = {
     "mode-0-distillation": ("核心定义/主张", "核心结论", "source_backlink"),
     "mode-1-sop": ("执行步骤", "检查清单", "source_backlink"),
     "mode-2-scene-mapping": ("适用任务", "场景触发词", "使用动作", "source_backlink"),
     "mode-3-cognitive-refresh": ("旧认知", "新认知", "关键机制", "source_backlink"),
     "mode-4-communication-game": ("局面定义", "参与方", "关键变量", "source_backlink"),
 }
+GENERIC_SCENT_VALUES = {"book", "reading", "书籍", "阅读", "读书", "阅读笔记"}
+EMPTY_TEMPLATE_PHRASES = (
+    "...",
+    "待补充",
+    "用 1-2 句话",
+    "说明其结构和含义",
+    "输出字段 1",
+    "Step 1",
+    "检查项 1",
+)
 
 
 def extract_frontmatter(content: str) -> dict[str, str]:
@@ -41,6 +51,15 @@ def extract_frontmatter(content: str) -> dict[str, str]:
         key, value = line.split(":", 1)
         fields[key.strip()] = value.strip()
     return fields
+
+
+def extract_frontmatter_block(content: str) -> str:
+    if not content.startswith("---\n"):
+        return ""
+    end = content.find("\n---", 4)
+    if end == -1:
+        return ""
+    return content[4:end].strip()
 
 
 def clean_heading(title: str) -> str:
@@ -73,12 +92,17 @@ def extract_headings_and_sections(content: str) -> list[dict]:
     sections = []
     for index, match in enumerate(matches):
         start = match.start()
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
+        level = len(match.group(1))
+        end = len(content)
+        for next_match in matches[index + 1 :]:
+            if len(next_match.group(1)) <= level:
+                end = next_match.start()
+                break
         title = clean_heading(match.group(2))
         sections.append(
             {
                 "heading": title,
-                "level": len(match.group(1)),
+                "level": level,
                 "start_line": content[:start].count("\n") + 1,
                 "end_line": content[:end].count("\n") + 1,
                 "text": content[start:end],
@@ -199,6 +223,73 @@ def check_formatting(content: str) -> list[str]:
     return check_table_formatting(content) + check_mermaid_formatting(content)
 
 
+def extract_scent_values(frontmatter_block: str) -> list[str]:
+    values: list[str] = []
+    in_scent = False
+    for line in frontmatter_block.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("scent:"):
+            in_scent = True
+            inline = stripped.split(":", 1)[1].strip()
+            if inline.startswith("[") and inline.endswith("]"):
+                values.extend(value.strip().strip("\"'") for value in inline[1:-1].split(",") if value.strip())
+            continue
+        if in_scent:
+            if stripped.startswith("- "):
+                values.append(stripped[2:].strip().strip("\"'"))
+                continue
+            if stripped and not line.startswith((" ", "\t")):
+                in_scent = False
+    return [value for value in values if value]
+
+
+def chapter_sections_for_coverage(sections: list[dict], coverage_details: list[dict]) -> list[dict]:
+    covered_by = {detail["covered_by"] for detail in coverage_details if detail.get("covered_by")}
+    return [section for section in sections if section["heading"] in covered_by]
+
+
+def detect_warning_issues(content: str, frontmatter_block: str, sections: list[dict], coverage_details: list[dict]) -> list[str]:
+    warnings: list[str] = []
+    chapter_sections = chapter_sections_for_coverage(sections, coverage_details)
+    short_sections = [
+        section["heading"]
+        for section in chapter_sections
+        if len([line for line in section["text"].splitlines() if line.strip()]) < 5
+    ]
+    if short_sections:
+        warnings.append("Several covered chapter sections appear very short.")
+
+    if any(phrase in content for phrase in EMPTY_TEMPLATE_PHRASES):
+        warnings.append("Some sections still contain empty template-like phrases; replace prompts with real notes.")
+
+    heading_patterns: dict[tuple[str, ...], int] = {}
+    for section in chapter_sections:
+        markers = tuple(re.findall(r"^\*\*(.+?)\*\*[:：]", section["text"], flags=re.MULTILINE))
+        if markers:
+            heading_patterns[markers] = heading_patterns.get(markers, 0) + 1
+    if any(count >= 2 and len(pattern) >= 3 for pattern, count in heading_patterns.items()):
+        warnings.append("The same structure is repeated across chapters; consider a more content-driven structure.")
+
+    if not any(marker in content for marker in ("证据", "案例", "数据", "研究", "推理")):
+        warnings.append("No obvious evidence, example, data, study, or reasoning section was found.")
+
+    html_card_count = content.count("<div style=")
+    if chapter_sections and html_card_count > max(6, len(chapter_sections) * 3):
+        warnings.append("HTML cards may be overused; plain Markdown is acceptable when it preserves the book logic better.")
+
+    scent_values = extract_scent_values(frontmatter_block)
+    if "scent:" not in frontmatter_block:
+        warnings.append("Scent tags are missing; add useful Chinese, English, or custom routing tags when possible.")
+    elif scent_values and all(value.lower() in GENERIC_SCENT_VALUES for value in scent_values):
+        warnings.append("Scent tags look too generic; prefer tags tied to methods, problem types, or usage scenes.")
+
+    if "research_context" in frontmatter_block or "research_context" in content:
+        if "外部背景" not in content and "Research Context" not in content:
+            warnings.append("Research context is referenced but not clearly separated from source-grounded reading.")
+
+    return warnings
+
+
 def find_coverage_for_toc_item(
     toc_item: dict,
     sections: list[dict],
@@ -278,6 +369,8 @@ def audit_reading_notes(
             "backlinks_passed": False,
             "chapters_missing_backlinks": [entry["id"] for entry in chapters],
             "format_issues": [],
+            "hard_checks": {"frontmatter": False, "chapter_coverage": False, "backlinks": False},
+            "warnings": ["Reading notes file does not exist."],
             "has_core_framework": False,
             "has_quotes": False,
             "passed": False,
@@ -285,6 +378,7 @@ def audit_reading_notes(
 
     content = reading_notes_path.read_text(encoding="utf-8")
     frontmatter = extract_frontmatter(content)
+    frontmatter_block = extract_frontmatter_block(content)
     missing_fields = [field for field in REQUIRED_FRONTMATTER_FIELDS if field not in frontmatter]
     sections = extract_headings_and_sections(content)
 
@@ -294,8 +388,8 @@ def audit_reading_notes(
     missing_backlinks = []
     missing_mode_required_fields = []
     coverage_details = []
-    reading_mode = frontmatter.get("reading_mode", "mode-0-distillation").strip().strip('"')
-    required_mode_fields = MODE_REQUIRED_FIELDS.get(reading_mode, MODE_REQUIRED_FIELDS["mode-0-distillation"])
+    reading_mode = frontmatter.get("reading_mode", "").strip().strip('"')
+    required_mode_fields = LEGACY_MODE_SUGGESTED_FIELDS.get(reading_mode, ())
 
     for entry in chapters:
         title = entry["title"]
@@ -316,7 +410,8 @@ def audit_reading_notes(
             missing_core_claim.append(entry["id"])
             missing_core_conclusion.append(entry["id"])
             missing_backlinks.append(entry["id"])
-            missing_mode_required_fields.append({"id": entry["id"], "missing_fields": list(required_mode_fields)})
+            if required_mode_fields:
+                missing_mode_required_fields.append({"id": entry["id"], "missing_fields": list(required_mode_fields)})
             continue
         if not any(marker in section for marker in CORE_CLAIM_MARKERS):
             missing_core_claim.append(entry["id"])
@@ -324,19 +419,32 @@ def audit_reading_notes(
             missing_core_conclusion.append(entry["id"])
         if not raw_backlinks_for_title(section, title, normalized_is_ambiguous):
             missing_backlinks.append(entry["id"])
-        missing_fields_for_section = [
-            field
-            for field in required_mode_fields
-            if not section_has_required_field(section, field, title, normalized_is_ambiguous)
-        ]
-        if missing_fields_for_section:
-            missing_mode_required_fields.append({"id": entry["id"], "missing_fields": missing_fields_for_section})
+        if required_mode_fields:
+            missing_fields_for_section = [
+                field
+                for field in required_mode_fields
+                if not section_has_required_field(section, field, title, normalized_is_ambiguous)
+            ]
+            if missing_fields_for_section:
+                missing_mode_required_fields.append({"id": entry["id"], "missing_fields": missing_fields_for_section})
 
     heading_titles = {section["heading"] for section in sections}
     has_core_framework = "全书核心框架" in heading_titles
     has_quotes = "金句" in heading_titles
-    mode_0 = reading_mode == "mode-0-distillation"
     format_issues = check_formatting(content)
+    warnings = detect_warning_issues(content, frontmatter_block, sections, coverage_details)
+    if format_issues:
+        warnings.append("Markdown or HTML formatting issues were found; review format_issues for details.")
+    if missing_core_claim:
+        warnings.append("Some chapters do not use the legacy 核心定义/主张 marker; this is allowed for content-driven notes.")
+    if missing_core_conclusion:
+        warnings.append("Some chapters do not use the legacy 核心结论 marker; this is allowed for content-driven notes.")
+    if missing_mode_required_fields:
+        warnings.append("Some legacy reading_mode suggested fields are missing; treat this as a template guidance warning, not a failure.")
+    if not has_core_framework:
+        warnings.append("No 全书核心框架 section was found; add one only if it improves the note.")
+    if not has_quotes:
+        warnings.append("No 金句 section was found; add quotes only when they are useful and source-grounded.")
     report = {
         "reading_notes_exists": True,
         "checked_chapters": len(chapters),
@@ -346,32 +454,33 @@ def audit_reading_notes(
         "missing_frontmatter_fields": missing_fields,
         "chapter_coverage_passed": not missing_chapters,
         "missing_chapters": missing_chapters,
-        "core_claims_passed": (not missing_core_claim) if mode_0 else True,
+        "core_claims_passed": not missing_core_claim,
         "chapters_missing_core_claim": missing_core_claim,
-        "core_conclusions_passed": (not missing_core_conclusion) if mode_0 else True,
+        "core_conclusions_passed": not missing_core_conclusion,
         "chapters_missing_core_conclusion": missing_core_conclusion,
         "backlinks_passed": not missing_backlinks,
         "chapters_missing_backlinks": missing_backlinks,
         "format_issues": format_issues,
         "coverage_details": coverage_details,
-        "reading_mode": reading_mode,
+        "reading_mode": reading_mode or None,
         "mode_required_fields": list(required_mode_fields),
         "mode_required_fields_passed": not missing_mode_required_fields,
         "chapters_missing_mode_required_fields": missing_mode_required_fields,
         "has_core_framework": has_core_framework,
         "has_quotes": has_quotes,
+        "hard_checks": {
+            "frontmatter": not missing_fields,
+            "chapter_coverage": not missing_chapters,
+            "backlinks": not missing_backlinks,
+        },
+        "warnings": warnings,
     }
     report["passed"] = all(
         [
             report["reading_notes_exists"],
             report["frontmatter_passed"],
             report["chapter_coverage_passed"],
-            report["core_claims_passed"],
-            report["core_conclusions_passed"],
             report["backlinks_passed"],
-            report["mode_required_fields_passed"],
-            report["has_core_framework"],
-            report["has_quotes"],
         ]
     )
     return report

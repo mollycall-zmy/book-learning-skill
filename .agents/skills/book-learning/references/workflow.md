@@ -2,7 +2,11 @@
 
 ## Purpose
 
-Turn a whole book into one durable knowledge artifact that can connect to a user knowledge base or memory palace without hard-coding personal paths.
+Turn a whole book into one durable, content-driven knowledge artifact that can connect to a user knowledge base or memory palace without hard-coding personal paths.
+
+A good reading note should be content-driven, not template-driven.
+
+中文说明：读书笔记不是填表。Agent 应先理解本章内容，再选择合适的表达结构。模板是提示清单，不是强制字段。如果本章没有某类内容，不要硬填。
 
 Lifecycle boundaries:
 
@@ -13,6 +17,36 @@ Lifecycle boundaries:
 - `index` = callable entry metadata
 
 Do not keep the same `reading_notes.md` in both `outputs/` and a knowledge base. Each run has exactly one canonical reading notes path.
+
+## Optional Research Context Preflight
+
+Before reading the book, the Agent may gather external context if:
+
+- the user explicitly asks for it
+- web access / API access is available
+- the user wants broader reception, critique, or background
+
+Possible sources:
+
+- publisher description
+- author interviews
+- reputable reviews
+- public summaries
+- academic or professional discussions
+- reader reviews, with caution
+
+Rules:
+
+1. External context must not replace reading the original book.
+2. External reviews are second-hand interpretations.
+3. Do not let popular reviews decide the structure of the notes.
+4. Use external context to identify possible themes, controversies, and high-value sections.
+5. The final reading notes must still be grounded in the source text.
+6. If web/API access is unavailable, skip this step without failing.
+7. If used, create `.cache/book-learning/{book_slug}/research_context.md`.
+8. Completion report should state whether research context was used.
+
+Use `assets/research_context_template.md`. Do not hard-code any specific website, search engine, or API.
 
 ## Path Resolution
 
@@ -39,7 +73,7 @@ Rules:
 - Do not hard-code personal local paths in code, docs, templates, tests, or output.
 - If a temporary note must be moved to `knowledge_root`, delete the temporary duplicate after moving.
 - `run_manifest.json`, the scent index, and the completion report must point to the final canonical notes path.
-- `{matched_knowledge_subdir}` is not a fixed value. It must come from directory audit, configuration, Agent context, or user confirmation.
+- `{matched_knowledge_subdir}` is not fixed. It must come from directory audit, configuration, Agent context, or user confirmation.
 
 ## Directory Responsibilities
 
@@ -51,11 +85,7 @@ raw/books/{book_slug}/
 └── {book_slug}.md
 ```
 
-Rules:
-
-- Raw files are read-only after creation.
-- `{book_slug}.md` must be retained as the Markdown source of truth for Obsidian backlinks and audits.
-- Do not put `reading_notes.md`, `chapters/`, `audit.json`, `run_manifest.json`, or `outputs/` under `raw/`.
+Raw stores only read-only source assets. `{book_slug}.md` is the Markdown source of truth for Obsidian backlinks and audits. Do not put `reading_notes.md`, `chapters/`, `audit.json`, `run_manifest.json`, or `outputs/` under `raw/`.
 
 ### Cache Layer
 
@@ -63,19 +93,12 @@ Rules:
 .cache/book-learning/{book_slug}/
 ├── toc.json
 ├── chapters/
+├── research_context.md
 ├── audit.json
 └── run_manifest.json
 ```
 
-Rules:
-
-- `toc.json` is the processing index.
-- `chapters/` is a temporary split for chapter-sized reading.
-- `audit.json` is the audit report for the canonical notes.
-- `run_manifest.json` records all run artifact paths.
-- Cache can be kept for debugging or cleaned later.
-- Cache is not final Obsidian knowledge content.
-- `chapters/` cannot be used as a durable backlink target.
+Cache stores processing artifacts only. `chapters/` is not final knowledge content and cannot be used as a durable backlink target.
 
 ### Canonical Reading Notes
 
@@ -107,74 +130,47 @@ If `knowledge_root` exists, inspect:
 {knowledge_root}/L1-事实与语义/02-📚 知识/
 ```
 
-List direct subdirectories only. Select `{matched_knowledge_subdir}` using:
+List direct subdirectories only. Select `{matched_knowledge_subdir}` using user-specified category, `preferred_category` from config, Agent context, book topic, user intent, reading lens, scent tags, and semantic fit with existing subdir names.
 
-- user-specified category
-- `preferred_category` from config
-- Agent context
-- book topic
-- user intent
-- selected reading mode
-- scent tags
-- semantic fit with existing subdir names
+If confidence is low, ask: `我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？`
 
-Matching output:
+Record `knowledge_root`, `knowledge_category_root`, `matched_knowledge_subdir`, `category_match_reason`, and `canonical_notes` in `run_manifest.json`.
 
-```json
-{
-  "matched_knowledge_subdir": "{matched_knowledge_subdir}",
-  "confidence": "high",
-  "reason": "用户指定 / 配置命中 / 语义匹配 / 用户确认"
-}
+### Step 0.6: Optional Research Context Preflight
+
+Run only when the user explicitly asks and web/API access is available. Store the result at:
+
+```text
+.cache/book-learning/{book_slug}/research_context.md
 ```
 
-Matching strategy:
+Use it as background only. It must not decide the reading note structure or override source text.
 
-- User-specified category wins.
-- Configured `preferred_category` wins when the directory exists.
-- Agent context can provide a category if it is explicit.
-- Semantic matching should consider topic, user intent, reading mode, scent tags, and subdir names together.
-- Do not rely on a single keyword.
-- If a book is clearly about learning methods, thinking methods, or cognitive tools, prefer existing subdirs whose names contain words such as `学习`, `认知`, `思维`, or `方法`.
-- If a book is industry, case, business, or brand oriented, prefer matching industry / case / business subdirs.
-- If confidence is low, ask: `我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？`
-- If the user skips subdir selection and allows root fallback, use `{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`.
-- If the user does not allow root fallback, use `outputs/reading_notes.md`.
+### Step 0.7: Select Reading Lens
 
-Record these fields in `run_manifest.json`: `knowledge_root`, `knowledge_category_root`, `matched_knowledge_subdir`, `category_match_reason`, and `canonical_notes`.
+Select one primary lens and optional secondary lenses.
 
-### Step 0.6: Route Reading Mode
+Available lenses:
 
-Select a `reading_mode` before writing notes.
+- `distillation`
+- `sop`
+- `scene-mapping`
+- `cognitive-refresh`
+- `communication-game`
 
-If the user specifies a mode, follow it. If not, infer from book type, table of contents, user goal, and scent tags. If confidence is low, ask the user to choose from the five modes. Default mode is `mode-0-distillation`.
+Reading lenses are not mutually exclusive templates. They are analytical views. Different chapters may use different lenses.
 
-Inputs:
-
-- user intent
-- book type
-- book topic
-- requested output style
-- knowledge destination
-- expected future use
-
-Supported modes:
-
-| Mode | Use When | Audit Required Fields | Preferred HTML |
-| --- | --- | --- | --- |
-| `mode-0-distillation` | 教材式干货提炼；理论书、方法论书、概念密集型书 | `核心定义/主张`, `核心结论`, `source_backlink` | Core Framework Grid |
-| `mode-1-sop` | SOP / 执行手册；实操类书籍、技能训练、工作流程 | `执行步骤`, `检查清单`, `source_backlink` | Process Flow |
-| `mode-2-scene-mapping` | 场景映射 / 生产力转化；商业、管理、品牌、决策、咨询 | `适用任务`, `场景触发词`, `使用动作`, `source_backlink` | Comparison + Core Framework Grid |
-| `mode-3-cognitive-refresh` | 认知刷新 / 反常识洞察；心理学、社会科学、认知升级 | `旧认知`, `新认知`, `关键机制`, `source_backlink` | Comparison |
-| `mode-4-communication-game` | 沟通博弈 / 决策推演；沟通、谈判、提问、说服、冲突处理 | `局面定义`, `参与方`, `关键变量`, `source_backlink` | Process Flow + Comparison |
-
-Write the selected mode to frontmatter:
+Write to frontmatter:
 
 ```yaml
-reading_mode: mode-0-distillation
+reading_lens:
+  primary: cognitive-refresh
+  secondary:
+    - scene-mapping
+    - sop
 ```
 
-Also write it to `run_manifest.json`. Mode-specific chapter templates live in `assets/reading_mode_templates.md`.
+Default primary lens is `distillation` when the user does not specify and there is no strong reason to choose another.
 
 ### Step 1: Store Raw Source
 
@@ -193,14 +189,6 @@ Convert the source to:
 ```text
 raw/books/{book_slug}/{book_slug}.md
 ```
-
-Supported inputs:
-
-- `.md`: copy or normalize into the raw book folder
-- `.pdf`: convert with `pymupdf4llm`
-- `.epub`, `.docx`, `.html`, `.htm`: convert with `pandoc`, falling back to `pypandoc` if available
-
-For scanned PDFs, run OCR before conversion. OCR is detected but not automated in the core conversion path.
 
 ### Step 3: Extract TOC To Cache
 
@@ -224,89 +212,46 @@ Read every in-scope chapter and write concise, high-density notes into `canonica
 
 Reading notes must include:
 
-- Frontmatter with `aliases`, `tags`, `author`, `source`, `created`, `reading_mode`, and `scent`.
-- A required One-liner HTML component for `全书一句话`.
-- A directory section.
-- Markdown chapter notes for every in-scope chapter.
-- A required Core Framework Grid HTML component under `## 全书核心框架`.
-- `## 金句`.
-- Mode-specific sections required by the selected `reading_mode`.
+- frontmatter with base source metadata
+- `source` pointing to raw source Markdown
+- `reading_lens`
+- useful `scent` tags when possible
+- a directory or chapter navigation
+- Markdown chapter notes for every in-scope chapter
+- at least one raw source Markdown backlink per covered chapter
+
+Recommended sections, not mandatory for every chapter:
+
+- definitions or claims
+- frameworks or mechanisms
+- evidence, examples, or reasoning chains
+- SOP steps or checklists
+- scene triggers or task mappings
+- old vs new understanding
+- participants, motivations, variables, strategies, or questions
+
+Do not invent content to satisfy a template.
 
 HTML card rules:
 
-- `全书一句话` must use the One-liner HTML component, not a callout.
-- `全书核心框架` must use the Core Framework Grid HTML component, not a plain list.
-- Process-like frameworks should use the Process Flow HTML component.
-- Contrastive ideas should use the Comparison HTML component.
-- HTML components must use inline style.
-- Do not use external CSS, JavaScript, dark card backgrounds, heavy shadows, or `border-top`.
-- Ordinary chapter notes may remain Markdown.
+- HTML components are optional visual aids, not mandatory structure.
+- One-liner cards are recommended for the book's central claim.
+- Core Framework Grid should be used only when the book has 3-8 parallel frameworks or concepts.
+- Process Flow should be used for clear step-by-step methods.
+- Comparison Card should be used for contrastive ideas.
+- Plain Markdown is always acceptable when it better preserves the book's logic.
+- HTML components must use inline style and must not use external CSS, JavaScript, dark card backgrounds, heavy shadows, or `border-top`.
 
 Scent rules:
 
-- Extract 3-5 scent tags after understanding the book.
-- Scent tags must come from the book's core methods, problem types, and applicable scenes.
-- Avoid generic values such as only `book` or `reading`.
-- Write scent tags into reading notes frontmatter.
-- Mirror the same scent tags in `run_manifest.json`.
-- Report scent tags in the completion report.
-
-Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, `raw/books/{book_slug}/outputs/`, or `knowledge_cards/`.
-
-## Reading Notes Structure
-
-```markdown
----
-aliases: [示例书]
-tags: [书籍, 阅读笔记]
-author: 示例作者
-source: "[[raw/books/示例书/示例书.md]]"
-created: YYYY-MM-DD
-reading_mode: mode-0-distillation
-scent:
-  - critical-thinking
-  - structured-reading
----
-
-# 《示例书》阅读笔记
-
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">全书一句话</div>
-  <div style="font-size: 20px; line-height: 1.7; color: #222; font-weight: 600;">这里写全书最核心的主张。</div>
-</div>
-
-## 目录
-
-- [[#第一章 示例章节]]
-
-## 第一章 示例章节
-
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
-
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书/示例书.md#第一章 示例章节|🔗]]
-
-## 全书核心框架
-
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">全书核心框架</div>
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用。</div>
-    </div>
-  </div>
-</div>
-
-## 金句
-
-> 1. “示例金句。”（第一章）
-```
+- Scent supports English, Chinese, or custom tags.
+- The recommended English list is not an enum.
+- If both human readability and stable routing are needed, use `scent` and `scent_en`.
+- Mirror scent tags in `run_manifest.json`.
 
 ## Backlink Rules / 双链回链规则
 
-Every chapter section must include backlinks to the raw source Markdown.
+Every covered chapter section must include backlinks to the raw source Markdown.
 
 Recommended format:
 
@@ -322,12 +267,7 @@ Accepted formats:
 [[~/example-knowledge-root/raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
 ```
 
-Rules:
-
-- Backlink targets must point to raw source Markdown under `raw/books/`.
-- Backlink targets must include the chapter heading.
-- Do not point backlinks to `.cache/book-learning/{book_slug}/chapters/`.
-- `chapters/` is an intermediate artifact and cannot be used as the long-term source target.
+Do not point backlinks to `.cache/book-learning/{book_slug}/chapters/`.
 
 ## Step 6: Audit Canonical Reading Notes
 
@@ -339,7 +279,26 @@ python3 .agents/skills/book-learning/scripts/audit_reading_notes.py \
   --out .cache/book-learning/{book_slug}/audit.json
 ```
 
-The audit checks frontmatter, chapter coverage, core claims, core conclusions, raw source backlinks, required high-level sections, and HTML / Markdown formatting warnings.
+Audit hard checks:
+
+- reading notes file exists
+- frontmatter exists and includes base source metadata
+- chapter coverage passes
+- each covered chapter has at least one valid raw source backlink
+
+Soft warnings:
+
+- section too short
+- repeated empty template phrases
+- too many identical headings
+- no evidence / examples found
+- too rigid structure repeated across all chapters
+- format issues
+- HTML card may be overused
+- scent missing or too generic
+- research context used but not clearly separated from source reading
+
+Audit should verify coverage, traceability, and obvious structural issues. It should not pretend to judge deep intellectual quality.
 
 ## Step 7: Update Run Manifest And Optional Scent Index
 
@@ -355,51 +314,7 @@ If `knowledge_root` exists, also update the configured scent index path or:
 {knowledge_root}/气味索引.md
 ```
 
-Append an entry:
-
-```markdown
-- [[L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记|示例书]]
-  - scent: critical-thinking, structured-reading
-  - raw: raw/books/{book_slug}/{book_slug}.md
-  - manifest: .cache/book-learning/{book_slug}/run_manifest.json
-  - status: ready_for_vector_index
-```
-
-If no `knowledge_root` exists, do not fail. Set `index_status` to `no_knowledge_root`, set `scent_index` to `null`, and report that the scent index was not updated.
-
-Run manifest example with `knowledge_root`:
-
-```json
-{
-  "book_slug": "示例书",
-  "raw_original": "raw/books/示例书/示例书.epub",
-  "raw_markdown": "raw/books/示例书/示例书.md",
-  "toc": ".cache/book-learning/示例书/toc.json",
-  "chapters": ".cache/book-learning/示例书/chapters/",
-  "audit": ".cache/book-learning/示例书/audit.json",
-  "knowledge_root": "{knowledge_root}",
-  "knowledge_category_root": "{knowledge_root}/L1-事实与语义/02-📚 知识",
-  "matched_knowledge_subdir": "{matched_knowledge_subdir}",
-  "category_match_reason": "用户确认",
-  "canonical_notes": "{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/示例书-阅读笔记.md",
-  "reading_mode": "mode-0-distillation",
-  "scent": ["critical-thinking", "structured-reading"],
-  "scent_index": "{knowledge_root}/气味索引.md",
-  "index_status": "ready_for_vector_index",
-  "created": "YYYY-MM-DD"
-}
-```
-
-Fallback manifest fields without `knowledge_root`:
-
-```json
-{
-  "canonical_notes": "outputs/reading_notes.md",
-  "reading_mode": "mode-0-distillation",
-  "scent_index": null,
-  "index_status": "no_knowledge_root"
-}
-```
+Append an entry pointing to the canonical notes path, raw source Markdown, manifest path, scent tags, and vector-index readiness.
 
 Text scent indexing is the baseline capability. Vector indexing is optional enhancement handled by an external skill or user system. `book-learning-skill` outputs index-ready metadata but does not require vector search or embeddings.
 
@@ -419,14 +334,14 @@ Text scent indexing is the baseline capability. Vector indexing is optional enha
   - 笔记：`{canonical_notes_path}`
   - 知识分类：`{matched_knowledge_subdir}` / 未归档
   - TOC：`.cache/book-learning/示例书/toc.json`
+  - 外部背景：`.cache/book-learning/示例书/research_context.md` / 未使用
   - 审计：`.cache/book-learning/示例书/audit.json`
   - Manifest：`.cache/book-learning/示例书/run_manifest.json`
-- **Scent Tags**：critical-thinking, structured-reading
-- **笔记模式**：mode-0-distillation / 教材式干货提炼
-- **目录匹配依据**：根据 reading_mode / scent / 用户指定 / 子目录名称匹配
+- **Reading Lens**：primary + secondary
+- **Scent Tags**：批判性思考, 证据检查 / critical-thinking, evidence-checking
 - **气味索引**：已更新 / 未更新（原因）
 - **向量索引**：ready_for_vector_index / no_knowledge_root / not_configured
-- **审计**：PASS / FAIL + 原因
+- **审计**：PASS / FAIL + warnings
 ```
 
 Do not report per-chapter notes as final artifacts. Do not report knowledge card counts.
@@ -445,3 +360,4 @@ Do not report per-chapter notes as final artifacts. Do not report knowledge card
 - Do not omit raw source Markdown backlinks.
 - Do not keep duplicate `reading_notes.md` files across `outputs/` and a knowledge base.
 - Do not hard-code personal knowledge base paths.
+- Do not let external reviews replace source reading.

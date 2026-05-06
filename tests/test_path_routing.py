@@ -62,6 +62,15 @@ class PathRoutingTest(unittest.TestCase):
         self.assertEqual(match["matched_knowledge_subdir"], "学习方法")
         self.assertEqual(match["confidence"], "medium")
 
+    def test_sop_lens_matches_method_like_subdir(self):
+        module = load_module()
+        subdirs = [Path(name) for name in ["行业案例", "学习方法", "跨界灵感"]]
+
+        match = module.match_knowledge_subdir(subdirs, reading_lens="sop")
+
+        self.assertEqual(match["matched_knowledge_subdir"], "学习方法")
+        self.assertEqual(match["confidence"], "medium")
+
     def test_user_category_wins_when_present(self):
         module = load_module()
         subdirs = [Path(name) for name in ["行业案例", "学习方法", "跨界灵感"]]

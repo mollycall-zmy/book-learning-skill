@@ -2,17 +2,27 @@
 card_type: scent-vector
 source_note: "{canonical_notes_path}"
 scent:
+  - 批判性思考
+  - 证据检查
+scent_en:
   - critical-thinking
   - evidence-checking
-  - hidden-assumption
-  - risk-judgment
 ---
 
 # Scent Vector / 气味向量
 
 气味向量是一种轻量语义路由线索，用于判断当前任务闻起来像什么问题。
 
-## 常见 scent
+## Scent Tag Rules
+
+`scent` can use Chinese, English, or custom tags.
+
+- 中文标签更适合人读。
+- 英文标签更适合稳定程序路由。
+- 如果两者都需要，可以同时使用 `scent` 和 `scent_en`。
+- 下列英文标签只是推荐词表，不是唯一合法枚举。
+
+## 推荐英文 scent
 
 - critical-thinking
 - evidence-checking

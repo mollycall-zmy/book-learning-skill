@@ -2,14 +2,18 @@
 
 Use inline HTML cards only when they make the canonical reading notes easier to scan in Markdown or Obsidian.
 
+HTML components are optional visual aids, not mandatory structure. Plain Markdown is always acceptable when it better preserves the book's logic.
+
 ## Use Cases
 
-- Book one-liner card near the top of the note
-- Process flow card for step-based methods or reasoning paths
-- Core framework grid under `## 全书核心框架`
+- Book one-liner card near the top of the note, when it helps state the central claim
+- Process flow card for clear step-based methods or reasoning paths
+- Core framework grid only when the book has 3-8 parallel frameworks or concepts
 - Comparison cards for opposing interpretations, modes, causes, or tradeoffs
 
 Ordinary chapter notes should remain Markdown unless a visual component clearly improves readability.
+
+Do not force HTML cards when the book's structure is narrative, progressive, argumentative, mathematical, or not grid-friendly. Do not distort 3, 5, or 7 ideas just to fit a visual grid.
 
 ## Visual Tokens
 

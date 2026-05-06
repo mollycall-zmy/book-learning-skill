@@ -10,13 +10,30 @@ It helps the Agent ask:
 
 ```yaml
 scent:
+  - 批判性思考
+  - 证据检查
+  - 隐藏假设
+  - 风险判断
+scent_en:
   - critical-thinking
   - evidence-checking
   - hidden-assumption
   - risk-judgment
 ```
 
-## Common Scent Values
+## Tag Language
+
+`scent` supports English, Chinese, or custom tags.
+
+- If the tags are primarily for human reading, Chinese can be more intuitive.
+- If the tags are primarily for program routing, English can be more stable.
+- If both are needed, use `scent` for human-readable tags and `scent_en` for stable routing tags.
+- Open-source usage does not require one fixed tag vocabulary.
+- User systems may define their own tags.
+
+## Recommended Scent Values
+
+These are recommendations, not a required enum.
 
 - critical-thinking
 - evidence-checking
@@ -50,9 +67,10 @@ scent:
 
 ## Reading Notes Rules
 
-- Each canonical reading note must include 3-5 useful `scent` values in frontmatter.
-- The same `scent` values must be mirrored in `.cache/book-learning/{book_slug}/run_manifest.json`.
+- Each canonical reading note should include useful `scent` values in frontmatter when possible.
+- The same `scent` values should be mirrored in `.cache/book-learning/{book_slug}/run_manifest.json`.
 - If `knowledge_root` exists, update the configured scent index path or `{knowledge_root}/气味索引.md`.
+- Missing or overly generic scent values should produce warnings, not hard failure.
 
 ## Rules
 

@@ -1,177 +1,94 @@
-# Reading Notes Section Template
+# Chapter Distillation Prompt / 章节提炼问题清单
 
-Use this compact section format inside the canonical reading notes path.
+Use this as a thinking checklist inside the canonical reading notes.
 
 Do not create separate `.notes.md` files by default.
 
-Required high-level components:
+A good reading note should be content-driven, not template-driven.
 
-- `全书一句话` must use Component 1.
-- `## 全书核心框架` must use Component 3.
-- Process-like frameworks should use Component 2.
-- Contrastive ideas should use Component 4.
-- Reading notes frontmatter must include 3-5 useful `scent` tags.
-- Mode-specific chapter structures live in `assets/reading_mode_templates.md`.
+读书笔记不是填表。Agent 应先理解本章内容，再选择合适的表达结构。模板是提示清单，不是强制字段。如果本章没有某类内容，不要硬填。
 
-## Card Differentiation Principle
+Every chapter must answer this question:
 
-The design system is unified, but card types must be visually distinguishable.
-
-Unified:
-
-- Warm white gradient background
-- Gold accent
-- Black / gray typography
-- Rounded corners
-- Light visual weight
-- Inline styles
-
-Differentiated:
-
-- One-liner: flat gradient panel, no inner white card
-- Process flow: lightweight nodes, thin border, no shadow
-- Core framework: stable knowledge cards, light shadow, optional thin gold divider
-- Comparison: two-column contrast layout with subtle background difference and center divider
-
-Do not create difference by adding noise, new colors, heavy shadows, or decorative ornaments.
-
-## Component 1: Book One-Liner
-
-Use this near the top of the canonical reading notes. It replaces the old callout style for the book's core claim.
-
-```html
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 11px; color: #CFA76F; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px;">
-    全书一句话
-  </div>
-  <div style="font-size: 20px; line-height: 1.7; color: #222; font-weight: 600;">
-    这里写全书最核心的主张：用一句话说明这本书到底在讲什么。
-  </div>
-</div>
+```text
+这章最值得带走的知识是什么？
 ```
 
-## Component 2: Process Flow
+Then choose the structure that fits the content.
 
-Use this for step-by-step methods, reasoning paths, model paths, or a stable replacement for complex Mermaid diagrams.
+## Guiding Questions
 
-```html
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
-    核心流程
-  </div>
-  <div style="display: flex; align-items: stretch; gap: 10px; margin-bottom: 18px;">
-    <div style="flex: 1; background: rgba(255,255,255,0.72); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 16px;">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Step 1</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">识别问题</div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明第一步的核心动作。</div>
-    </div>
-    <div style="display: flex; align-items: center; color: #CFA76F; font-size: 18px; font-weight: 600;">→</div>
-    <div style="flex: 1; background: linear-gradient(135deg, #D4AF7A 0%, #CFA76F 100%); border-radius: 12px; padding: 16px;">
-      <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-bottom: 6px;">Key Step</div>
-      <div style="font-size: 14px; color: #FFFFFF; font-weight: 600; margin-bottom: 8px;">关键转折</div>
-      <div style="font-size: 12px; color: rgba(255,255,255,0.92); line-height: 1.6;">说明最关键的判断或行动。</div>
-    </div>
-    <div style="display: flex; align-items: center; color: #CFA76F; font-size: 18px; font-weight: 600;">→</div>
-    <div style="flex: 1; background: rgba(255,255,255,0.72); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 16px;">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Step 3</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">形成结论</div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明最后得到的结果。</div>
-    </div>
-  </div>
-</div>
-```
+Read each chapter, then answer only the questions that genuinely fit.
 
-## Component 3: Core Framework Grid
+### 1. 核心知识
 
-Use this under `## 全书核心框架` for 3-8 core models, concepts, or methods. Framework cards are stable knowledge blocks, so they may keep light shadows and a thin gold divider below the title.
+- 本章定义了什么重要概念？
+- 本章提出了什么核心判断？
+- 本章澄清了什么容易混淆的问题？
 
-```html
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
-    全书核心框架
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px;">
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 01</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架一</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架一的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 02</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架二</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架二的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 03</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架三</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架三的作用和含义。</div>
-    </div>
-    <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Framework 04</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">框架四</div>
-      <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">说明框架四的作用和含义。</div>
-    </div>
-  </div>
-  <div style="background: #FFFFFF; border-radius: 12px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-    <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">总体关系</div>
-    <div style="height: 1px; background: rgba(207,167,111,0.35); margin: 0 0 10px 0;"></div>
-    <div style="font-size: 12px; color: #555; line-height: 1.6;">这里说明这些框架之间的关系，以及它们如何共同构成本书的核心观点。</div>
-  </div>
-</div>
-```
+### 2. 关键框架
 
-## Component 4: Comparison Card
+- 本章有没有模型、分类、步骤、流程、判断标准？
+- 这个框架解决什么问题？
+- 它由哪些部分组成？
 
-Use this for surface vs deeper cause, wrong vs correct interpretation, old vs new mode, cost vs gain, or two competing viewpoints.
+### 3. 支撑证据
 
-```html
-<div style="background: linear-gradient(135deg, #FAFAFA 0%, #F2F0EB 100%); padding: 28px; border-radius: 16px; margin: 24px 0;">
-  <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 18px;">
-    核心对比
-  </div>
-  <div style="display: grid; grid-template-columns: 1fr 1px 1fr; gap: 18px; align-items: stretch;">
-    <div style="background: #FAFAFA; border-radius: 12px; padding: 18px;">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Surface</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">表面理解</div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">这里写常见但不够准确的理解。</div>
-    </div>
-    <div style="background: rgba(207,167,111,0.45); width: 1px;"></div>
-    <div style="background: #F8F6F2; border-radius: 12px; padding: 18px;">
-      <div style="font-size: 11px; color: #888; margin-bottom: 6px;">Deeper</div>
-      <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">深层理解</div>
-      <div style="font-size: 12px; color: #555; line-height: 1.6;">这里写更准确、更有解释力的理解。</div>
-    </div>
-  </div>
-</div>
-```
+- 作者用了什么研究、数据、案例或推理支撑结论？
+- 哪些证据最有力？
+- 哪些只是故事，不应该被当成核心结论？
 
-## Ordinary Chapter Section
+### 4. 操作方法
 
-### {章节标题}
+- 本章有没有能直接执行的方法？
+- 第一步应该做什么？
+- 如何判断自己做对了？
+- 常见错误是什么？
 
-**核心定义/主张**：用 1-2 句话说明本章最核心的观点。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
+### 5. 场景映射
 
-**关键框架**：
+- 本章知识适合用于哪些真实任务？
+- 用户在什么情况下应该调用这部分知识？
+- 它能帮助评估方案、做决策、写作、沟通还是复盘？
 
-- 框架 1：说明其结构和含义。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
-- 框架 2：说明其结构和含义。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
+### 6. 认知刷新
 
-如果没有明确框架，可以省略 `关键框架`，不要硬填。
+- 本章打破了什么常见误解？
+- 旧理解是什么？
+- 新理解是什么？
+- 背后的机制是什么？
 
-**核心结论**：用 1-2 句话写出作者在本章得出的最重要结论。[[raw/books/示例书/示例书.md#{章节标题}|🔗]]
+### 7. 沟通 / 博弈 / 判断
 
-**支撑证据**：
+- 本章是否涉及多方互动？
+- 各方的动机是什么？
+- 信息差、利益冲突、可信度、风险在哪里？
+- 有哪些可以直接使用的提问或反问话术？
 
-- 证据 1：最有力的数据、研究、案例或论证链。
-- 证据 2：如果有第二个强证据再补充。
+### 8. 可复用产物
 
-## Backlink Rules
+- 本章最适合沉淀成什么？
+  - 定义
+  - 框架
+  - SOP
+  - 清单
+  - 判断问题
+  - 反问话术
+  - 决策表
+  - 场景触发器
 
-Use raw source Markdown backlinks:
+## Output Principles
+
+- 有定义就写定义。
+- 有流程就写流程。
+- 有对比就写对比。
+- 有机制就写机制。
+- 有方法就写 SOP。
+- 有博弈就写参与方和变量。
+- 没有的内容不要硬填。
+- 每个 in-scope 章节必须至少有一个 raw source Markdown backlink。
+
+Backlink examples:
 
 ```text
 [[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
@@ -179,3 +96,16 @@ Use raw source Markdown backlinks:
 ```
 
 Do not backlink to `.cache/book-learning/{book_slug}/chapters/`; chapter files are processing cache, not durable source targets.
+
+## Optional HTML Components
+
+HTML components are optional visual aids, not mandatory structure.
+
+Use `references/html_card_spec.md` when HTML improves readability:
+
+- One-liner card: recommended for the book's central claim.
+- Core Framework Grid: use only when the book has 3-8 parallel frameworks or concepts.
+- Process Flow: use for clear step-by-step methods.
+- Comparison Card: use for contrastive ideas.
+
+Plain Markdown is always acceptable when it better preserves the book's logic.

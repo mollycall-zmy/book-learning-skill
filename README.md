@@ -1,44 +1,32 @@
-<h1 align="center">book-learning-skill</h1>
+# book-learning-skill
 
-<p align="center">
-  <strong>From book notes to callable thinking tools.</strong><br>
-  <sub>
-    By <a href="https://mollycall.cn">MW · 美未职造</a>
-    &mdash;
-    从读书笔记，到可调用的思维工具
-  </sub>
-</p>
+**从读书笔记，到可调用的思维工具。**
 
-<p align="center">
-  <a href="./LICENSE">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg">
-  </a>
-  <a href="./README.en.md">
-    <img alt="README English" src="https://img.shields.io/badge/README-English-blue.svg">
-  </a>
-  <img alt="Agent Skill" src="https://img.shields.io/badge/Agent%20Skill-book--learning-purple.svg">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-blue.svg">
-</p>
+By [MW · 美未职造](https://mollycall.cn) —— 从书籍学习，到知识调用
 
-**book-learning-skill** is a skill for transforming books into structured notes, method cards, scene triggers, and callable thinking tools for AI agents.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![README English](https://img.shields.io/badge/README-English-blue.svg)](./README.en.md)
+![Agent Skill](https://img.shields.io/badge/Agent%20Skill-book--learning-purple.svg)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
 
-**From book notes to callable thinking tools.**
+English version: [README.en.md](./README.en.md)
 
-`book-learning-skill` 是一个面向 AI Agent 的读书与知识调用技能。它不只是把书转成 Markdown 或普通读书笔记，而是进一步把书中的知识归档到用户的 `knowledge_root` / memory palace，提炼成方法卡、场景触发索引和可调用的思维工具，让 Agent 在真实任务中能够主动使用书本知识。
+`book-learning-skill` 是一个面向 AI Agent 的读书与知识调用技能。它不只是把书转成 Markdown 或普通读书笔记，而是把书中的定义、框架、结论、证据和方法，沉淀为结构化阅读笔记、方法卡、场景触发索引和可调用的思维工具。
 
 目标不是“读完一本书”，而是让书里的知识真正参与方案评估、商业策划、批判性思考、决策判断、复盘分析和结构化写作。
 
+本项目采用 content-driven notes：读书笔记不是填表，Agent 应先理解章节内容，再决定用定义、机制、流程、对比、场景、案例、推理链或普通 Markdown 来表达。
+
 > 出品：[MW · 美未职造](https://mollycall.cn)  
-> License：MIT  
-> Status：v4 direction
+> License：MIT
 
 ## 目录
 
 - [项目简介](#项目简介)
 - [这个项目解决什么问题](#这个项目解决什么问题)
 - [核心理念](#核心理念)
-- [How It Works](#how-it-works)
-- [Skill](#skill)
+- [工作流](#工作流)
+- [技能结构](#技能结构)
 - [当前能力](#当前能力)
 - [支持格式](#支持格式)
 - [输入与输出](#输入与输出)
@@ -47,8 +35,8 @@
 - [在 Agent 中使用](#在-agent-中使用)
 - [仓库结构](#仓库结构)
 - [本地测试](#本地测试)
-- [License](#license)
-- [Contributing](#contributing)
+- [License / 许可证](#license--许可证)
+- [贡献](#贡献)
 
 ## 项目简介
 
@@ -64,31 +52,34 @@ Agent 在处理长文本时需要明确工作流，而不是自由发挥。这�
 
 ## 核心理念
 
-> 结构保存 > 章节理解 > 干货提炼 > 来源可追溯 > 单一阅读笔记 > 方法卡 > 知识调用
+> 结构保存 > 章节理解 > 内容驱动提炼 > 来源可追溯 > 单一阅读笔记 > 方法卡 > 知识调用
 
 - **结构保存**：先识别目录树和章节边界，再开始总结。
 - **章节理解**：每章独立消化，避免只读前几章就生成全书结论。
 - **细节保留**：定义、数据、案例、限定条件、反例和反常识观点都不能被粗暴压缩。
 - **来源可追溯**：每个观点都应能追溯到章节或行号。
-- **干货提炼**：优先提取定义、框架、结论和支撑证据，而不是泛泛分析。
+- **内容驱动提炼**：模板是提示清单，不是强制字段；没有的内容不要硬填。
 - **单一阅读笔记**：每轮只生成一份 canonical reading notes；有 `knowledge_root` 时直接写入知识库，没有时才写入 `outputs/reading_notes.md`。
 - **路径不硬编码**：知识库路径必须来自参数、环境变量、配置文件、Agent 上下文或用户输入。
-- **气味索引**：阅读笔记 frontmatter 和 run manifest 都记录 scent tags，供文本索引和可选向量索引使用。
+- **Reading lenses**：读书视角可混合使用，不是互斥模板。
+- **HTML 可选增强**：HTML 卡片只在提升可读性时使用，纯 Markdown 始终可接受。
+- **气味索引**：scent 支持中文、英文或自定义标签，供文本索引和可选向量索引使用。
+- **外部背景可选**：用户明确要求时可先收集书评、访谈或公开讨论作为背景，但不能替代原书阅读。
 - **知识调用**：阅读笔记完成后，可提炼方法卡、场景索引和调用协议，让书本知识参与真实任务。
 
-## How It Works
+## 工作流
 
 ```text
-User → Agent → book-learning skill
-             → raw source → raw Markdown
-             → .cache TOC / chapters / audit / manifest
-             → canonical reading notes → scent index / index-ready metadata
+用户 → Agent → book-learning skill
+              → raw 原始资产 → raw Markdown
+              → .cache TOC / chapters / audit / manifest
+              → canonical reading notes → scent index / index-ready metadata
              → 方法卡 → 场景触发索引 → 知识调用
 ```
 
 这个流程的关键不是“更快总结”，而是让 Agent 在长文本处理中具备结构感、审计感和可追溯性。
 
-## Skill
+## 技能结构
 
 | Skill | 描述 | 典型触发词 |
 | --- | --- | --- |
@@ -102,12 +93,14 @@ User → Agent → book-learning skill
 - [x] 输出章节标题、层级、起止行号
 - [x] 按目录树拆分章节文件到 `.cache/book-learning/`
 - [x] 生成单一 canonical reading notes
-- [x] 审计阅读笔记是否覆盖章节、核心字段和双链回链
+- [x] 审计阅读笔记是否覆盖章节、frontmatter 和 raw source 双链回链
 - [x] 支持 `knowledge_root` / memory palace 归档路径抽象
 - [x] 审计知识目录直接子目录并写入 `{matched_knowledge_subdir}`
-- [x] 支持 `reading_mode` 路由和模式化审计
-- [x] 要求高层视觉区使用 HTML 卡片组件
+- [x] 支持可混合 `reading_lens`
+- [x] 支持可选 HTML 卡片组件
 - [x] 将 scent tags 写入笔记 frontmatter 和 run manifest
+- [x] 支持中文、英文和自定义 scent tags
+- [x] 支持可选 Research Context Preflight
 - [x] 提供阅读笔记章节模板
 - [x] 提供方法卡、场景触发索引、气味向量和调用报告模板
 - [x] 提供 Agent Skill 标准目录结构
@@ -166,33 +159,45 @@ User → Agent → book-learning skill
 
 ## 三层输出
 
-### Layer 1: Reading Notes
+### 第一层：阅读笔记
 
 - 默认输出：`outputs/reading_notes.md`，仅在无 `knowledge_root` 时使用
 - 知识库输出：`{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md`
-- 保留原文结构、核心定义、关键框架、核心结论、支撑证据和原文回链
-- frontmatter 必须包含 `reading_mode`
-- `全书一句话` 和 `全书核心框架` 必须使用内联 HTML 卡片组件
-- frontmatter 必须包含 3-5 个有用的 `scent` tags
+- 保留原文结构、最值得带走的知识和原文回链
+- frontmatter 记录 `reading_lens`
+- HTML 卡片是可选增强，纯 Markdown 可以通过审计
+- frontmatter 可包含中文、英文或自定义 `scent` tags
 - 这是基础工作流，不依赖第二阶段
 
-Reading Modes:
+读书视角：
 
-- Mode 0：`mode-0-distillation`，教材式干货提炼
-- Mode 1：`mode-1-sop`，SOP / 执行手册
-- Mode 2：`mode-2-scene-mapping`，场景映射 / 生产力转化
-- Mode 3：`mode-3-cognitive-refresh`，认知刷新 / 反常识洞察
-- Mode 4：`mode-4-communication-game`，沟通博弈 / 决策推演
+- `distillation`：干货提炼
+- `sop`：SOP / 执行手册
+- `scene-mapping`：场景映射 / 生产力转化
+- `cognitive-refresh`：认知刷新 / 反常识洞察
+- `communication-game`：沟通博弈 / 决策推演
 
-如果用户没有指定模式，默认使用 Mode 0；如果 Agent 低置信度，会先询问用户。
+这些是可混合的分析视角，不是固定模板。不同章节可以使用不同视角。
 
-### Layer 2: Method Cards
+可选外部背景预检：
+
+- 用户明确要求时，Agent 可以先收集公开背景、访谈、书评或专业讨论。
+- 外部资料只能作为背景板，不能反客为主。
+- 如果使用，记录到 `.cache/book-learning/{book_slug}/research_context.md`。
+
+审计边界：
+
+- 审计能检查章节覆盖、frontmatter、raw source 回链、格式和明显结构问题。
+- 审计会把过度模板化、HTML 过用、scent 缺失或过泛等作为 warning。
+- PASS 不代表笔记一定高质量，不能替代人的判断。
+
+### 第二层：方法卡
 
 - 从阅读笔记中提炼 3-5 张可执行方法卡
 - 每张方法卡都要能用于真实任务
 - 方法卡不是章节摘要，也不替代阅读笔记
 
-### Layer 3: Knowledge Invocation
+### 第三层：知识调用
 
 - 场景触发索引
 - 气味向量路由
@@ -354,7 +359,7 @@ book-learning-skill/
 python3 -m unittest discover -s tests
 ```
 
-CLI smoke test：
+CLI 冒烟测试：
 
 ```bash
 python3 .agents/skills/book-learning/scripts/check_tools.py
@@ -363,11 +368,11 @@ python3 .agents/skills/book-learning/scripts/split_chapters.py raw/books/示例�
 python3 .agents/skills/book-learning/scripts/audit_reading_notes.py --toc .cache/book-learning/示例书/toc.json --reading-notes outputs/reading_notes.md --raw-source raw/books/示例书/示例书.md --out .cache/book-learning/示例书/audit.json
 ```
 
-## License
+## License / 许可证
 
 本项目采用 MIT License，详见 [LICENSE](./LICENSE)。
 
-## Contributing
+## 贡献
 
 欢迎提交 Issue 和 Pull Request。提交前请运行测试，并确保没有提交任何版权书籍、私人文件或输出目录。
 

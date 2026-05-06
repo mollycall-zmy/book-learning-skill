@@ -5,27 +5,32 @@ description: Learn an entire book from PDF, EPUB, DOCX, HTML, or Markdown by pre
 
 # Book Learning
 
-The goal is to distill the book into useful reading notes: definitions, frameworks, conclusions, and supporting evidence. The output should help someone who has not read the book quickly understand what the book actually says.
+The goal is to turn a whole book into one useful, traceable, content-driven reading note.
 
-This is not a generic summary, not performative analysis, and not automatic knowledge-card generation.
+A good reading note should be content-driven, not template-driven.
 
-Second-stage goal: From book notes to callable thinking tools. After the canonical reading notes are complete and audited, the Agent may extract a cognitive toolbox so book knowledge can be invoked in real tasks.
+中文说明：读书笔记不是填表。Agent 应该先理解本章内容，再选择合适的表达结构。模板是提示清单，不是强制字段。如果本章没有某类内容，不要硬填。如果本章更适合用流程、对比、机制、场景、案例、推理链，就使用对应结构。
+
+This is not a generic summary, not performative analysis, and not automatic knowledge-card generation. Method cards and callable thinking tools are optional second-stage artifacts after the canonical reading notes are complete and audited.
 
 Chinese trigger examples: `喂你一本书`, `学习这本书`, `帮我逐章消化这个 PDF`, `读一下这个 EPUB`, `逐章做笔记`, `先提取目录树`, `生成读书笔记`, `整理成阅读笔记`.
 
-Follow this order strictly:
+## Workflow Order
 
 0. Resolve `knowledge_root` / `memory_palace_root`.
 0.5. Audit the knowledge directory structure and resolve `{matched_knowledge_subdir}` before deciding the canonical reading notes path.
-0.6. Route the reading request to a `reading_mode`.
+0.6. Optional Research Context Preflight, only when the user asks and web/API access is available.
+0.7. Select one primary reading lens and optional secondary lenses.
 1. Store original user files under `raw/books/{book_slug}/` and do not modify them.
 2. Convert the source to `raw/books/{book_slug}/{book_slug}.md`.
 3. Extract a table of contents to `.cache/book-learning/{book_slug}/toc.json`.
 4. Split chapters to `.cache/book-learning/{book_slug}/chapters/` when chapter-sized processing is needed.
-5. Read every in-scope chapter and write all chapter notes directly into one canonical reading notes path.
-6. Audit the canonical reading notes for chapter coverage, core definition / claim, core conclusion, raw source Markdown backlinks, scent frontmatter, and required sections.
+5. Read every in-scope chapter and write all notes directly into one canonical reading notes path.
+6. Audit the canonical reading notes for coverage, frontmatter, raw source Markdown backlinks, and structural warnings.
 7. Write `.cache/book-learning/{book_slug}/run_manifest.json` and update the optional scent index.
-8. Report the raw source path, canonical reading notes path, scent tags, scent index status, audit status, index status, coverage, and key takeaways.
+8. Report the raw source path, canonical reading notes path, scent tags, research context status, scent index status, audit status, index status, coverage, and key takeaways.
+
+## Path Rules
 
 Resolve `knowledge_root` in this priority order:
 
@@ -33,126 +38,190 @@ Resolve `knowledge_root` in this priority order:
 2. Environment variable `BOOK_LEARNING_KNOWLEDGE_ROOT`.
 3. `.book-learning/config.json` or `book-learning.config.json`.
 4. Agent context with an explicit `knowledge_root` or `memory_palace_root`.
-5. If none exists, ask: "是否要归档到你的知识库？请提供 knowledge_root 路径。若不提供，将只输出到 outputs/reading_notes.md。"
+5. If none exists, ask: `是否要归档到你的知识库？请提供 knowledge_root 路径。若不提供，将只输出到 outputs/reading_notes.md。`
 6. If the user skips archival, use `outputs/reading_notes.md`.
 
-If `knowledge_root` exists, audit `{knowledge_root}/L1-事实与语义/02-📚 知识/` and choose `{matched_knowledge_subdir}` from existing direct subdirectories. Canonical notes path is `{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md`. If no confident match exists, ask: "我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？" If the user allows root fallback, use `{knowledge_root}/L1-事实与语义/02-📚 知识/{book_slug}-阅读笔记.md`; otherwise use `outputs/reading_notes.md`. Never hard-code a personal knowledge base path.
+If `knowledge_root` exists, audit `{knowledge_root}/L1-事实与语义/02-📚 知识/` and choose `{matched_knowledge_subdir}` from existing direct subdirectories. Canonical notes path is `{knowledge_root}/L1-事实与语义/02-📚 知识/{matched_knowledge_subdir}/{book_slug}-阅读笔记.md`. If no confident match exists, ask: `我发现你的知识目录下有多个子目录，这本书应该归档到哪一个？`
 
-Knowledge subdir matching priority: user-specified category > `preferred_category` in config > Agent context > semantic match from book topic, user intent, reading mode, scent tags, and existing subdir names > ask user. Do not set a global default subdir.
-
-## Reading Mode Selection
-
-Before writing `reading_notes.md`, choose a reading mode.
-
-If the user specifies a mode, follow it. If not, infer the mode from the book type, table of contents, user goal, and scent tags. If confidence is low, ask:
-
-```text
-你希望用哪种模式消化这本书？
-0. 教材式干货提炼
-1. SOP / 执行手册
-2. 场景映射 / 生产力转化
-3. 认知刷新 / 反常识洞察
-4. 沟通博弈 / 决策推演
-```
-
-Default mode is `mode-0-distillation`.
-
-Supported modes:
-
-- `mode-0-distillation`: 教材式干货提炼，适合理论书、方法论书、概念密集型书。
-- `mode-1-sop`: SOP / 执行手册，适合实操类、技能训练、工作流程。
-- `mode-2-scene-mapping`: 场景映射 / 生产力转化，适合商业、管理、品牌、决策、咨询。
-- `mode-3-cognitive-refresh`: 认知刷新 / 反常识洞察，适合心理学、社会科学、认知升级。
-- `mode-4-communication-game`: 沟通博弈 / 决策推演，适合沟通、谈判、提问、说服、冲突处理。
-
-Write `reading_mode: mode-0-distillation` or the selected mode into frontmatter and `run_manifest.json`. The audit must apply the matching mode required fields.
+Never hard-code a personal knowledge base path.
 
 Directory responsibility:
 
 - `raw` is only for read-only source assets: original file plus converted full Markdown.
-- `.cache` is only for system intermediates: TOC, chapter splits, audit report, and run manifest.
+- `.cache` is only for system intermediates: TOC, chapter splits, optional research context, audit report, and run manifest.
 - `knowledge_root / memory_palace_root` is the user-provided knowledge base root.
-- `L1 / knowledge` is the only final knowledge output when `knowledge_root` exists.
 - `outputs/reading_notes.md` is used only when the user does not provide a knowledge base path.
 - `run_manifest.json` is the callable index entry for text indexes, scent routing, and optional vector indexing.
 
-Never skip chapters. If one chapter is missing, re-audit the whole TOC instead of patching only the visible gap.
+Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, `raw/books/{book_slug}/outputs/`, or `knowledge_cards/`. Do not keep duplicate `reading_notes.md` files across `outputs/` and a knowledge base.
 
-If a skipped chapter is found, do not only repair that chapter. Re-scan the TOC and all chapter states, then check from the failed chapter through the final chapter for consecutive omissions or structural shifts.
+## Optional Research Context Preflight
 
-Do not create default per-chapter `.notes.md` files, `outputs/notes/`, `outputs/book_summary.md`, `raw/books/{book_slug}/outputs/`, or `knowledge_cards/`. Knowledge cards are optional only when the user explicitly asks for them after reading.
+Before reading the book, the Agent may gather external context if:
 
-Each chapter section should focus on:
+- the user explicitly asks for it
+- web access / API access is available
+- the user wants broader reception, critique, or background
 
-- Core Definition / Claim
-- Key Framework
-- Core Conclusion
-- Supporting Evidence
-- Source Backlink
+Possible sources include publisher descriptions, author interviews, reputable reviews, public summaries, academic or professional discussions, and reader reviews with caution.
 
-When generating `reading_notes.md`, the Agent MUST use the bundled HTML card components for high-level visual sections:
+Rules:
 
-- The book one-liner MUST use the One-liner HTML component.
-- The `全书核心框架` section MUST use the Core Framework Grid HTML component.
-- Process-like frameworks SHOULD use the Process Flow HTML component.
-- Contrastive ideas SHOULD use the Comparison HTML component.
+1. External context must not replace reading the original book.
+2. External reviews are second-hand interpretations.
+3. Do not let popular reviews decide the structure of the notes.
+4. Use external context to identify possible themes, controversies, and high-value sections.
+5. The final reading notes must still be grounded in the source text.
+6. If web/API access is unavailable, skip this step without failing.
+7. If used, create `.cache/book-learning/{book_slug}/research_context.md`.
+8. Completion report should state whether research context was used.
 
-生成阅读笔记时必须使用 HTML 卡片组件：
+Use `assets/research_context_template.md` when this step is used. Do not hard-code any search engine, website, or API.
 
-- “全书一句话”必须使用 One-liner HTML 卡片；
-- “全书核心框架”必须使用 Core Framework Grid；
-- 流程型方法优先使用 Process Flow；
-- 对比型内容优先使用 Comparison；
-- 普通章节内容仍可使用 Markdown。
+## Reading Lens Selection
 
-Use `references/html_card_spec.md` and `assets/chapter_note_template.md` for the exact inline HTML components. Do not use external CSS, JavaScript, dark card backgrounds, heavy shadows, or `border-top`.
+Before writing `reading_notes.md`, choose one primary lens and optional secondary lenses.
 
-After reading notes are complete, extract 3-5 useful `scent` tags from the book's core methods, problem types, and applicable scenes. Write them into reading notes frontmatter, mirror them in `run_manifest.json`, and include them in the completion report.
+If the user specifies a lens, follow it. If not, infer from:
 
-Do not finish until all in-scope chapters are represented in the canonical reading notes, `reading_mode` and `scent` frontmatter exist, raw source Markdown backlinks pass audit, mode-specific audit rules pass, and the reading-note audit passes. For Chinese requests, report the output paths and learning summary in Chinese.
+- book type
+- table of contents
+- user goal
+- scent tags
+- chapter content
 
-Backlink rule: chapter backlinks must point to the converted raw source Markdown, using `[[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]` or the Obsidian extensionless form `[[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]`. Do not backlink to `.cache/book-learning/{book_slug}/chapters/`.
+If confidence is low, ask the user. Default primary lens is `distillation`.
+
+Available lenses:
+
+- `distillation`: 干货提炼
+- `sop`: 执行手册
+- `scene-mapping`: 场景映射 / 生产力转化
+- `cognitive-refresh`: 认知刷新 / 反常识洞察
+- `communication-game`: 沟通博弈 / 决策推演
+
+Reading lenses are not rigid templates. They are ways of seeing the book. The Agent may use different lenses for different chapters.
+
+Write the selected lens to frontmatter:
+
+```yaml
+reading_lens:
+  primary: cognitive-refresh
+  secondary:
+    - scene-mapping
+    - sop
+```
+
+Also mirror it in `run_manifest.json`.
+
+## Chapter Notes
+
+Each chapter must answer: `这章最值得带走的知识是什么？`
+
+Then choose the structure that fits:
+
+- 有定义就写定义。
+- 有流程就写流程。
+- 有对比就写对比。
+- 有机制就写机制。
+- 有方法就写 SOP。
+- 有博弈就写参与方和变量。
+- 没有的内容不要硬填。
+
+Use `assets/chapter_note_template.md` as a guiding question checklist, not as a mandatory field list.
+
+## HTML Components
+
+HTML components are optional visual aids, not mandatory structure.
+
+Use HTML cards when they improve readability:
+
+- One-liner card: recommended for the book's central claim.
+- Core Framework Grid: use only when the book has 3-8 parallel frameworks or concepts.
+- Process Flow: use for clear step-by-step methods.
+- Comparison Card: use for contrastive ideas.
+
+Do not force HTML cards when the book's structure is narrative, progressive, argumentative, mathematical, or not grid-friendly. Plain Markdown is always acceptable when it better preserves the book's logic.
+
+Use `references/html_card_spec.md` for visual rules. Do not use external CSS, JavaScript, dark card backgrounds, heavy shadows, or `border-top`.
+
+## Scent Tags
+
+After reading notes are complete, extract useful `scent` tags from the book's core methods, problem types, and applicable scenes.
+
+Scent supports English, Chinese, or custom tags. The bundled English list is only a recommended vocabulary, not a required enum.
+
+If the note is for human reading, Chinese scent tags may be more intuitive. If the note is for stable program routing, English tags may be more stable. If both are needed, use both fields:
+
+```yaml
+scent:
+  - 批判性思考
+  - 证据检查
+scent_en:
+  - critical-thinking
+  - evidence-checking
+```
+
+Mirror scent tags in `run_manifest.json` and include them in the completion report. Missing or generic scent values should produce audit warnings, not hard failure.
+
+## Backlink Rule
+
+Chapter backlinks must point to the converted raw source Markdown:
+
+```text
+[[raw/books/{book_slug}/{book_slug}.md#{章节标题}|🔗]]
+[[raw/books/{book_slug}/{book_slug}#{章节标题}|🔗]]
+```
+
+Do not backlink to `.cache/book-learning/{book_slug}/chapters/`.
+
+## Audit Boundary
+
+The audit verifies coverage, traceability, frontmatter, and obvious structural issues. It does not pretend to judge deep intellectual quality.
+
+Hard checks:
+
+- reading notes file exists
+- frontmatter exists and includes base source metadata
+- in-scope chapter coverage passes
+- each covered chapter has at least one valid raw source backlink
+
+Soft warnings:
+
+- sections are very short
+- repeated empty template phrases
+- too many identical headings
+- no evidence / examples found
+- rigid structure repeated across chapters
+- formatting issues
+- HTML cards may be overused
+- scent missing or too generic
+- research context is not clearly separated from source-grounded reading
+
+Do not finish until hard checks pass. Warnings should be reported and improved when useful, but warnings do not automatically fail the run.
 
 ## Cognitive Toolbox Extension
 
-After the reading notes are complete, the Agent may extract 3-5 high-quality method cards from the book.
-
-A method card is not a summary. It is a callable thinking tool for real tasks.
-
-Generate method cards only after:
-
-- The canonical reading notes are complete.
-- Chapter coverage audit passes.
-- The book's core definitions, frameworks, conclusions, and evidence are understood.
-
-Default output remains `outputs/reading_notes.md` only when no knowledge base path is provided.
-
-Method cards, scene indexes, scent vectors, and invocation reports are second-stage knowledge invocation artifacts.
+After the reading notes are complete, the Agent may extract 3-5 high-quality method cards from the book if the user asks.
 
 Rules:
 
 - Do not let method cards replace the canonical reading notes.
 - Do not restore old automatic knowledge-card generation.
 - Generate method cards only after the reading note passes audit.
-- Prefer 3-5 strong method cards per book.
 - Method cards must be usable in real tasks.
-- Method cards are not reading summaries.
 
 Use bundled resources:
 
-- Read `references/workflow.md` for the detailed end-to-end workflow and failure handling.
-- Read `references/output_schema.md` before writing TOC files, reading notes, or audit reports.
-- Read `references/html_card_spec.md` before writing reading notes. High-level HTML cards are mandatory.
-- Read `references/reading_modes.md` before choosing the reading mode.
-- Read `references/method_card_design.md` before extracting method cards.
-- Read `references/scene_trigger_index.md` when building or updating scene triggers.
-- Read `references/scent_vector_routing.md` when assigning required reading-note scent values.
-- Read `references/knowledge_invocation.md` before using method cards in user tasks.
-- Use `scripts/check_tools.py` to detect optional converters.
-- Use `scripts/convert_to_md.py` for PDF, EPUB, DOCX, and HTML conversion.
-- Use `scripts/extract_toc.py`, `scripts/split_chapters.py`, and `scripts/audit_reading_notes.py` for deterministic structure handling.
-- Use `assets/chapter_note_template.md` as the compact per-section format inside the canonical reading notes.
-- Use `assets/reading_mode_templates.md` for mode-specific chapter structures.
-- Use `assets/method_card_template.md`, `assets/scene_index_template.md`, `assets/scent_vector_template.md`, and `assets/invocation_report_template.md` for second-stage artifacts.
+- `references/workflow.md` for the detailed workflow.
+- `references/output_schema.md` before writing TOC files, reading notes, manifests, or audit reports.
+- `references/reading_modes.md` before choosing reading lenses.
+- `references/html_card_spec.md` when HTML cards improve readability.
+- `references/scent_vector_routing.md` when assigning scent values.
+- `references/knowledge_invocation.md` before using method cards in user tasks.
+- `assets/chapter_note_template.md` as the chapter distillation prompt.
+- `assets/reading_mode_templates.md` for compact optional lens snippets.
+- `assets/research_context_template.md` for optional research context.
+- `scripts/check_tools.py`, `scripts/convert_to_md.py`, `scripts/extract_toc.py`, `scripts/split_chapters.py`, and `scripts/audit_reading_notes.py` for deterministic structure handling.
 
 Do not commit real books, PDFs, EPUBs, OCR output, private files, or generated knowledge bases.

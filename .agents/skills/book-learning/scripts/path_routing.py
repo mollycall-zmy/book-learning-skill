@@ -23,7 +23,8 @@ def list_knowledge_subdirs(knowledge_root: Path) -> list[Path]:
 def match_knowledge_subdir(
     existing_subdirs: list[Path],
     *,
-    reading_mode: str = "mode-0-distillation",
+    reading_lens: str | None = None,
+    reading_mode: str | None = None,
     preferred_category: str | None = None,
     user_category: str | None = None,
 ) -> dict[str, str | None]:
@@ -36,19 +37,28 @@ def match_knowledge_subdir(
                 "reason": source,
             }
 
-    mode_hints = {
-        "mode-1-sop": ("学习", "方法", "认知", "思维"),
-        "mode-2-scene-mapping": ("案例", "商业", "品牌", "行业"),
-        "mode-3-cognitive-refresh": ("认知", "思维", "模型"),
-        "mode-4-communication-game": ("沟通", "谈判", "决策", "思维"),
+    lens = reading_lens or reading_mode or "distillation"
+    lens_aliases = {
+        "mode-0-distillation": "distillation",
+        "mode-1-sop": "sop",
+        "mode-2-scene-mapping": "scene-mapping",
+        "mode-3-cognitive-refresh": "cognitive-refresh",
+        "mode-4-communication-game": "communication-game",
     }
-    for hint in mode_hints.get(reading_mode, ()):
+    normalized_lens = lens_aliases.get(lens, lens)
+    lens_hints = {
+        "sop": ("学习", "方法", "认知", "思维"),
+        "scene-mapping": ("案例", "商业", "品牌", "行业"),
+        "cognitive-refresh": ("认知", "思维", "模型"),
+        "communication-game": ("沟通", "谈判", "决策", "思维"),
+    }
+    for hint in lens_hints.get(normalized_lens, ()):
         for name in names:
             if hint in name:
                 return {
                     "matched_knowledge_subdir": name,
                     "confidence": "medium",
-                    "reason": f"reading_mode:{reading_mode}; hint:{hint}",
+                    "reason": f"reading_lens:{normalized_lens}; hint:{hint}",
                 }
 
     return {
